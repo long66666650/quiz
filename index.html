@@ -66,6 +66,7 @@ button{border:0;border-radius:13px;padding:13px 16px;font-size:16px;font-weight:
     <form id="options"></form>
     <div id="feedback" class="feedback" aria-live="polite"></div>
     <div class="actions">
+      <button id="prevBtn" class="secondary" type="button">上一题</button>
       <button id="backHome" class="secondary" type="button">返回首页</button>
       <button id="submitBtn" class="primary" type="button">提交答案</button>
       <button id="nextBtn" class="primary hidden" type="button">下一题</button>
@@ -149,11 +150,16 @@ function submit(){
     if(selected.includes(val)&&!ans.includes(val)) label.classList.add("wrong");
   });
   const fb=$("#feedback");
-  if(ok){fb.className="feedback ok";fb.textContent="✅ 回答正确";}
-  else{fb.className="feedback bad";fb.innerHTML=`❌ 回答错误<br>正确答案：<b>${ans.join("、")}</b><br>你的答案：${selected.join("、")}`;}
+  if(ok){
+    setTimeout(()=>{ idx++; render(); }, 120);
+    return;
+  } else {
+    fb.className="feedback bad";
+    fb.innerHTML=`❌ 回答错误<br>正确答案：<b>${ans.join("、")}</b><br>你的答案：${selected.join("、")}`;
+  }
   $("#submitBtn").classList.add("hidden"); $("#nextBtn").classList.remove("hidden");
 }
-function next(){idx++;render();}
+function next(){idx++;render();}\nfunction prev(){if(idx<=0){alert("已经是第一题了。");return;}idx--;render();}
 function finish(){
   show("result");
   const pct=roundDone?Math.round(roundCorrect/roundDone*100):0;
@@ -162,7 +168,7 @@ function finish(){
 }
 document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>start(b.dataset.mode)));
 $("#submitBtn").addEventListener("click",submit);
-$("#nextBtn").addEventListener("click",next);
+$("#nextBtn").addEventListener("click",next);\n$("#prevBtn").addEventListener("click",prev);
 $("#backHome").addEventListener("click",()=>{show("home");refreshHome();});
 $("#resultHome").addEventListener("click",()=>{show("home");refreshHome();});
 $("#resetBtn").addEventListener("click",()=>{if(confirm("确定清空全部答题记录和错题吗？")){saved={done:{},wrong:[],last:0};save();refreshHome();}});
