@@ -40,6 +40,17 @@ button{min-height:46px;border:0;border-radius:13px;padding:12px 14px;font-size:1
 .backline{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
 .backline button{min-height:38px;padding:8px 12px;font-size:14px}
 @media(max-width:420px){.app{padding:10px 9px 28px}.card{padding:14px}.q{font-size:18px}.opt{padding:12px}}
+
+.palette-wrap{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+.palette-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.palette-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-height:360px;overflow:auto;padding:4px}
+.qnum{aspect-ratio:1/1;border-radius:50%;border:0;background:#e9eef5;color:#2f3540;font-size:15px;font-weight:700;min-height:0;padding:0}
+.qnum.current{outline:3px solid var(--accent);background:#fff;color:var(--accent)}
+.qnum.correct{background:#10b981;color:#fff}
+.qnum.wrong{background:#ef4444;color:#fff}
+.qnum.unanswered{background:#e9eef5;color:#2f3540}
+.palette-toggle{width:100%;margin-top:8px}
+
 </style>
 </head>
 <body>
@@ -96,6 +107,14 @@ button{min-height:46px;border:0;border-radius:13px;padding:12px 14px;font-size:1
       <button id="modeBtn" class="secondary" type="button">返回首页</button>
       <button id="nextBtn" class="primary" type="button">下一题</button>
     </div>
+    <button id="paletteToggle" class="secondary palette-toggle" type="button">题号导航</button>
+    <div id="paletteWrap" class="palette-wrap hidden">
+      <div class="palette-head">
+        <b>题号导航</b>
+        <span class="muted">点哪个就跳到哪道题</span>
+      </div>
+      <div id="paletteGrid" class="palette-grid"></div>
+    </div>
   </section>
 
   <section id="result" class="card hidden">
@@ -104,7 +123,7 @@ button{min-height:46px;border:0;border-radius:13px;padding:12px 14px;font-size:1
     <div class="actions"><button id="resultHome" class="primary" type="button">返回本套首页</button></div>
   </section>
 
-  <div class="note">点选选项后立即判题：答对自动下一题，答错显示正确答案；无需“提交答案”。可直接跳到指定题号，也可以手动上一题/下一题；退出后继续上次进度。</div>
+  <div class="note">点选选项后立即判题：答对自动下一题，答错显示正确答案。题目页内新增“题号导航”，可像答题卡一样直接点任意题号跳转；绿色=答对，红色=答错，灰色=未答。</div>
 </div>
 
 <script>
@@ -180,6 +199,7 @@ function render(){
   $("#nextBtn").classList.remove("hidden");
   $("#prevBtn").disabled=idx===0;
   const box=$("#options"); box.innerHTML="";
+  renderPalette();
   q.options.forEach(o=>{
     const label=document.createElement("label");label.className="opt";
     const input=document.createElement("input");input.type=q.type==="multiple"?"checkbox":"radio";input.name="answer";input.value=o.key;
@@ -244,6 +264,37 @@ function finish(){
   $("#resultText").innerHTML=`本轮共答 <b>${roundDone}</b> 题，答对 <b>${roundCorrect}</b> 题，正确率 <b>${pct}%</b>。<br>当前本套错题共 <b>${s.wrong.length}</b> 题。`;
   updateStats();
 }
+function renderPalette(){
+  const grid=$("#paletteGrid");
+  if(!grid || !currentSetId) return;
+  const all=SETS[currentSetId].questions;
+  const s=state();
+  grid.innerHTML="";
+  all.forEach((q,n)=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="qnum";
+    b.textContent=n+1;
+    const result=s.done[q.id];
+    if(result===true) b.classList.add("correct");
+    else if(result===false) b.classList.add("wrong");
+    else b.classList.add("unanswered");
+    if(currentMode==="all" && n===idx) b.classList.add("current");
+    if(currentMode!=="all" && queue[idx] && q.id===queue[idx].id) b.classList.add("current");
+    b.addEventListener("click",()=>{
+      currentMode="all";
+      queue=[...all];
+      idx=n;
+      s.progress.all=idx;
+      persist();
+      $("#paletteWrap").classList.add("hidden");
+      render();
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+    grid.appendChild(b);
+  });
+}
+
 function jumpToNumber(){
   if(!currentSetId)return;
   const n=parseInt($("#jumpInput").value,10);
@@ -265,6 +316,7 @@ document.querySelectorAll("[data-set]").forEach(b=>b.addEventListener("click",()
 document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>start(b.dataset.mode)));
 $("#backSets").addEventListener("click",()=>{currentSetId=null;$("#topInfo").textContent="请选择题库";show("setHome");});
 $("#jumpBtn").addEventListener("click",jumpToNumber);
+$("#paletteToggle").addEventListener("click",()=>{$("#paletteWrap").classList.toggle("hidden");renderPalette();});
 $("#nextBtn").addEventListener("click",next);
 $("#prevBtn").addEventListener("click",prev);
 $("#modeBtn").addEventListener("click",()=>{updateStats();show("modeHome");});
