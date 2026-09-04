@@ -39,12 +39,12 @@ button{min-height:46px;border:0;border-radius:13px;padding:12px 14px;font-size:1
 .note{font-size:12px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.6}
 .backline{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
 .backline button{min-height:38px;padding:8px 12px;font-size:14px}
-@media(max-width:420px){.app{padding:10px 9px 28px}.card{padding:14px}.q{font-size:18px}.opt{padding:12px}}
+@media(max-width:420px){.app{padding:10px 9px 28px}.card{padding:14px}.q{font-size:18px}.opt{padding:12px}.palette-grid{gap:12px 8px}.qnum{width:52px;height:52px;min-height:52px;max-width:52px;font-size:15px}}
 
 .palette-wrap{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
 .palette-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
-.palette-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-height:360px;overflow:auto;padding:4px}
-.qnum{aspect-ratio:1/1;border-radius:50%;border:0;background:#e9eef5;color:#2f3540;font-size:15px;font-weight:700;min-height:0;padding:0}
+.palette-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px 12px;max-height:420px;overflow:auto;padding:8px 4px 12px}
+.qnum{width:58px;height:58px;min-height:58px;max-width:58px;border-radius:50%;border:0;background:#e9eef5;color:#2f3540;font-size:16px;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center;justify-self:center;line-height:1}
 .qnum.current{outline:3px solid var(--accent);background:#fff;color:var(--accent)}
 .qnum.correct{background:#10b981;color:#fff}
 .qnum.wrong{background:#ef4444;color:#fff}
