@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Supabase 激活接口诊断</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#eef7ff;margin:0;padding:20px;color:#223}
+.card{max-width:720px;margin:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 10px 30px #0001}
+button{width:100%;padding:14px;margin:8px 0;border:0;border-radius:12px;background:#3b82f6;color:#fff;font-size:16px}
+pre{white-space:pre-wrap;word-break:break-all;background:#f6f8fa;padding:14px;border-radius:12px;min-height:180px}
+small{color:#667}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>Supabase 激活接口诊断</h2>
+<p>这个页面只用假密码测试接口，不会消耗你的任何真实激活码。</p>
+<small id="env"></small>
+<button onclick="testActivate()">测试 activate_license（假密码）</button>
+<button onclick="testVerify()">测试 verify_activation（假 token）</button>
+<pre id="out">等待测试…</pre>
+</div>
+<script>
+const URL="https://oinjyvwdpclcuyyplthy.supabase.co";
+const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbmp5dndkcGNsY3V5eXBsdGh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MTg2OTIsImV4cCI6MjEwNDA5NDY5Mn0.rxOf2ENZrI1lCbsf-LWBr94_1I4zSa46RIz_7BzZADw";
+const out=document.getElementById('out');
+document.getElementById('env').textContent='页面来源：'+location.origin+' | 在线：'+navigator.onLine;
+
+async function callRpc(name, body){
+  const endpoint=URL+'/rest/v1/rpc/'+name;
+  const start=Date.now();
+  try{
+    const r=await fetch(endpoint,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':KEY,
+        'Authorization':'Bearer '+KEY
+      },
+      body:JSON.stringify(body)
+    });
+    const text=await r.text();
+    return {
+      ok:r.ok,
+      status:r.status,
+      statusText:r.statusText,
+      endpoint:endpoint,
+      elapsed_ms:Date.now()-start,
+      response:text
+    };
+  }catch(e){
+    return {
+      fetch_threw:true,
+      endpoint:endpoint,
+      elapsed_ms:Date.now()-start,
+      error_name:e && e.name,
+      error_message:e && e.message,
+      stack:String((e && e.stack) || '')
+    };
+  }
+}
+async function testActivate(){
+  out.textContent='测试中…';
+  const result=await callRpc('activate_license', {
+    p_code:'INVALID-DEBUG-CODE',
+    p_device_id:'debug-'+Date.now()
+  });
+  out.textContent=JSON.stringify(result,null,2);
+}
+async function testVerify(){
+  out.textContent='测试中…';
+  const result=await callRpc('verify_activation', {
+    p_token:'00000000-0000-0000-0000-000000000000',
+    p_device_id:'debug-device'
+  });
+  out.textContent=JSON.stringify(result,null,2);
+}
+</script>
+</body>
+</html>
