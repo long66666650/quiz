@@ -36,9 +36,9 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
 <body>
 <div class="app">
 <section id="home">
-  <div class="hero"><h1>☀️ 铁路刷题题库</h1><p>第一套做成无限变式练习；第二套保持原来的 369 题和原题型，不做改动。</p></div>
+  <div class="hero"><h1>☀️ 铁路刷题题库</h1><p>第一套做成无限变式练习，可选单选、多选、判断；第二套保持原来的 369 题和原题型，不做改动。</p></div>
   <div class="card">
-    <button class="setbtn" id="goFirst">第一套 · 无限变式刷题<small>可选单选 / 多选 / 填空 / 混合；可选简单 / 一般 / 困难。</small></button>
+    <button class="setbtn" id="goFirst">第一套 · 无限变式刷题<small>可选单选 / 多选 / 判断 / 混合；可选简单 / 一般 / 困难。</small></button>
     <button class="setbtn" id="goSecond">第二套 · 高级工综合题库<small>保持原版：选择、判断点选判题；填空、实作、简答、论述、计算直接看原题和答案。</small></button>
   </div>
 </section>
@@ -46,11 +46,11 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
 <section id="firstSetup" class="hidden">
   <div class="hero"><h1>第一套 · 无限变式刷题</h1><p>同一套知识点一直变着出，尽量避免连续重复。</p></div>
   <div class="card">
-    <div class="row"><div><label class="title">题型</label><select id="typeSel"><option value="mixed">混合出题</option><option value="single">只练单选</option><option value="multiple">只练多选</option><option value="fill">只练填空</option></select></div>
+    <div class="row"><div><label class="title">题型</label><select id="typeSel"><option value="mixed">混合出题</option><option value="single">只练单选</option><option value="multiple">只练多选</option><option value="judge">只练判断</option></select></div>
     <div><label class="title">难度</label><select id="diffSel"><option value="easy">简单</option><option value="normal" selected>一般</option><option value="hard">困难</option></select></div></div>
     <button id="startFirst" class="primary start">开始无限刷题</button>
     <button id="firstHome" class="secondary start">返回两套题库</button>
-    <div class="mode-note">简单：选项更少、填空更短；一般：按原题正常练；困难：干扰项更接近正确答案，填空挖得更深。</div>
+    <div class="mode-note">简单：判断题改动较直白；一般：正常变式；困难：判断题会用更容易混淆的表述，选择题干扰项也更接近正确答案。</div>
   </div>
 </section>
 
@@ -103,11 +103,35 @@ function fHard(id){return HARD.find(q=>q.id===id)||ORIGINAL.find(q=>q.id===id)}
 function fChoice(base){const src=fc.difficulty==="hard"?fHard(base.id):base;let opts=src.options.map(o=>({text:o.text,correct:src.answer.includes(o.key)}));if(fc.difficulty==="easy"&&src.type==="single")opts=[...opts.filter(o=>o.correct),...shuffle(opts.filter(o=>!o.correct)).slice(0,2)];opts=shuffle(opts);return {kind:src.type,question:src.question,options:opts.map((o,i)=>({...o,key:"ABCDEFG"[i]})),sourceId:src.id}}
 function mask(s,d){s=String(s).trim();if(s.length<=2)return{display:"【____】",answer:s};let min=d==="easy"?1:d==="normal"?2:Math.max(2,Math.floor(s.length*.35));let max=d==="easy"?Math.min(2,s.length-1):d==="normal"?Math.min(4,s.length-1):Math.max(min,Math.floor(s.length*.65));let len=Math.min(s.length,min+Math.floor(Math.random()*(max-min+1))),start=Math.floor(Math.random()*(s.length-len+1));return{display:s.slice(0,start)+"【____】"+s.slice(start+len),answer:s.slice(start,start+len)}}
 function fFill(base){let ct=base.options.filter(o=>base.answer.includes(o.key)).map(o=>o.text),full=ct.join("；"),r=Math.floor(Math.random()*4);if(fc.difficulty==="hard"&&Math.random()<.45)r=3;if(r===2&&ct.length>1){let i=Math.floor(Math.random()*ct.length);return{kind:"fill",question:"多项正确结论里挖掉一项，请补出来：\n"+base.question,cloze:ct.map((t,j)=>i===j?"【____】":t).join("；"),fillAnswer:ct[i],fullAnswer:full}}if(r===3)return{kind:"fill",question:"直接写出这道题的正确答案：\n"+base.question,cloze:"【请填写完整正确答案】",fillAnswer:full,fullAnswer:full};let m=mask(full,fc.difficulty);return{kind:"fill",question:"根据原题正确结论，补全空缺：\n"+base.question,cloze:m.display,fillAnswer:m.answer,fullAnswer:full}}
-function fKind(base){if(fc.type!=="mixed")return fc.type;let r=Math.random();if(r<.30)return"fill";if(base.type==="multiple")return"multiple";if(r<.72)return"single";return"multiple"}
+function fJudge(base){
+  const src=fc.difficulty==="hard"?fHard(base.id):base;
+  const correctTexts=src.options.filter(o=>src.answer.includes(o.key)).map(o=>o.text);
+  const wrongTexts=src.options.filter(o=>!src.answer.includes(o.key)).map(o=>o.text);
+  let statement="",truth=true;
+  const useTrue=Math.random() < (fc.difficulty==="easy" ? .65 : .5);
+  if(useTrue || !wrongTexts.length){
+    truth=true;
+    if(correctTexts.length===1) statement=correctTexts[0];
+    else statement=correctTexts.join("、");
+  }else{
+    truth=false;
+    statement=wrongTexts[Math.floor(Math.random()*wrongTexts.length)];
+  }
+  return {
+    kind:"judge",
+    question:"判断下列说法是否正确：\n"+src.question+"\n\n说法："+statement,
+    options:[
+      {key:"A",text:"正确",correct:truth},
+      {key:"B",text:"错误",correct:!truth}
+    ],
+    sourceId:src.id
+  };
+}
+function fKind(base){if(fc.type!=="mixed")return fc.type;let r=Math.random();if(r<.30)return"judge";if(base.type==="multiple")return"multiple";if(r<.72)return"single";return"multiple"}
 function fStats(){$("#fDone").textContent=fdone;$("#fRight").textContent=fright;$("#fAcc").textContent=fdone?Math.round(fright/fdone*100)+"%":"0%"}
 function fNext(){flock=false;$("#fFeedback").className="feedback hidden";$("#fOptions").innerHTML="";$("#fFillArea").classList.add("hidden");$("#fCloze").classList.add("hidden");$("#fFillInput").value="";fserial++;let base=fPick(),kind=fKind(base);
 if(kind==="multiple"&&base.type!=="multiple"){let ms=ORIGINAL.filter(q=>q.type==="multiple");base=ms[Math.floor(Math.random()*ms.length)]}if(kind==="single"&&base.type!=="single"){let ss=ORIGINAL.filter(q=>q.type==="single");base=ss[Math.floor(Math.random()*ss.length)]}
-fcur=kind==="fill"?fFill(base):fChoice(base);$("#fSerial").textContent="第 "+fserial+" 题";$("#fTag").textContent=({easy:"简单",normal:"一般",hard:"困难"}[fc.difficulty])+" · "+({mixed:"混合",single:"单选",multiple:"多选",fill:"填空"}[fc.type]);$("#fQuestion").textContent=fcur.question;
+fcur=kind==="judge"?fJudge(base):fChoice(base);$("#fSerial").textContent="第 "+fserial+" 题";$("#fTag").textContent=({easy:"简单",normal:"一般",hard:"困难"}[fc.difficulty])+" · "+({mixed:"混合",single:"单选",multiple:"多选",judge:"判断"}[fc.type]);$("#fQuestion").textContent=fcur.question;
 if(fcur.kind==="fill"){$("#fCloze").textContent=fcur.cloze;$("#fCloze").classList.remove("hidden");$("#fFillArea").classList.remove("hidden");return}
 fcur.options.forEach(o=>{let l=document.createElement("label");l.className="opt";let inp=document.createElement("input");inp.type=fcur.kind==="multiple"?"checkbox":"radio";inp.name="fans";inp.value=o.key;let k=document.createElement("span");k.className="key";k.textContent=o.key+".";let t=document.createElement("span");t.textContent=o.text;l.append(inp,k,t);$("#fOptions").append(l);inp.onchange=()=>fGradeChoice()})}
 function fSel(){return[...document.querySelectorAll('#fOptions input:checked')].map(x=>x.value)}function fCor(){return fcur.options.filter(o=>o.correct).map(o=>o.key)}function eq(a,b){return a.length===b.length&&[...a].sort().every((x,i)=>x===[...b].sort()[i])}
