@@ -73,6 +73,11 @@ button{min-height:46px;border:0;border-radius:13px;padding:12px 14px;font-size:1
     </div>
     <div class="menu">
       <button class="menuBtn" data-mode="all">▶ 顺序练习<small>从上次退出的位置继续。</small></button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="jumpInput" type="number" min="1" inputmode="numeric" placeholder="例如 200"
+          style="flex:1;min-width:0;height:46px;border:1px solid var(--line);border-radius:13px;padding:0 12px;font-size:16px">
+        <button id="jumpBtn" class="secondary" type="button" style="flex:0 0 auto">跳到题号</button>
+      </div>
       <button class="menuBtn" data-mode="random">🔀 随机练习<small>随机顺序也会保存进度。</small></button>
       <button class="menuBtn" data-mode="wrong">✖ 错题重练<small>只练曾经答错的题，进度也会保存。</small></button>
       <button id="resetSet" class="secondary">清空本套答题记录</button>
@@ -89,8 +94,7 @@ button{min-height:46px;border:0;border-radius:13px;padding:12px 14px;font-size:1
     <div class="actions">
       <button id="prevBtn" class="secondary" type="button">上一题</button>
       <button id="modeBtn" class="secondary" type="button">返回首页</button>
-      <button id="submitBtn" class="primary" type="button">提交答案</button>
-      <button id="nextBtn" class="primary hidden" type="button">下一题</button>
+      <button id="nextBtn" class="primary" type="button">下一题</button>
     </div>
   </section>
 
@@ -100,7 +104,7 @@ button{min-height:46px;border:0;border-radius:13px;padding:12px 14px;font-size:1
     <div class="actions"><button id="resultHome" class="primary" type="button">返回本套首页</button></div>
   </section>
 
-  <div class="note">答对直接自动跳下一题；答错停留并显示正确答案；可以手动查看上一题；退出后下次继续上次进度。</div>
+  <div class="note">点选选项后立即判题：答对自动下一题，答错显示正确答案；无需“提交答案”。可直接跳到指定题号，也可以手动上一题/下一题；退出后继续上次进度。</div>
 </div>
 
 <script>
@@ -173,7 +177,7 @@ function render(){
   const tag=$("#sourceTag");
   if(q.source){tag.textContent=q.source;tag.classList.remove("hidden");}else{tag.classList.add("hidden");}
   $("#feedback").classList.add("hidden"); $("#feedback").textContent="";
-  $("#submitBtn").classList.remove("hidden"); $("#nextBtn").classList.add("hidden");
+  $("#nextBtn").classList.remove("hidden");
   $("#prevBtn").disabled=idx===0;
   const box=$("#options"); box.innerHTML="";
   q.options.forEach(o=>{
@@ -182,24 +186,39 @@ function render(){
     const key=document.createElement("span");key.className="key";key.textContent=o.key+".";
     const txt=document.createElement("span");txt.textContent=o.text;
     label.append(input,key,txt);box.appendChild(label);
+    input.addEventListener("change",()=>handleChoice(o.key));
   });
 }
-function submit(){
+function handleChoice(chosenKey){
   if(submitted)return;
   const q=queue[idx], s=state();
+  const ans=[...q.answer].sort();
+
+  // 多选题保留勾选逻辑：点选后若已选齐正确项或点错任一项，则立即判定。
+  if(q.type==="multiple"){
+    const selected=[...document.querySelectorAll('input[name="answer"]:checked')].map(x=>x.value).sort();
+    const hasWrong=selected.some(x=>!ans.includes(x));
+    const completeCorrect=selected.length===ans.length && selected.join("")===ans.join("");
+    if(!hasWrong && !completeCorrect) return;
+  }
+
   const selected=[...document.querySelectorAll('input[name="answer"]:checked')].map(x=>x.value).sort();
-  if(!selected.length){alert("请先选择答案。");return;}
-  const ans=[...q.answer].sort(), ok=selected.join("")===ans.join("");
+  const ok=selected.join("")===ans.join("");
   submitted=true; roundDone++; if(ok)roundCorrect++;
+
   s.done[q.id]=ok; s.progress[currentMode]=idx;
   if(ok) s.wrong=s.wrong.filter(id=>id!==q.id);
   else if(!s.wrong.includes(q.id)) s.wrong.push(q.id);
   persist();
 
   if(ok){
-    idx++; s.progress[currentMode]=idx; persist();
-    setTimeout(render,80); return;
+    idx++;
+    s.progress[currentMode]=idx;
+    persist();
+    setTimeout(render,80);
+    return;
   }
+
   document.querySelectorAll(".opt").forEach(label=>{
     const input=label.querySelector("input");input.disabled=true;
     if(ans.includes(input.value))label.classList.add("correct");
@@ -208,7 +227,6 @@ function submit(){
   const fb=$("#feedback");
   fb.innerHTML=`❌ 回答错误<br>正确答案：<b>${ans.join("、")}</b><br>你的答案：${selected.join("、")}`;
   fb.classList.remove("hidden");
-  $("#submitBtn").classList.add("hidden");$("#nextBtn").classList.remove("hidden");
 }
 function next(){
   idx++;state().progress[currentMode]=idx;persist();render();
@@ -226,10 +244,27 @@ function finish(){
   $("#resultText").innerHTML=`本轮共答 <b>${roundDone}</b> 题，答对 <b>${roundCorrect}</b> 题，正确率 <b>${pct}%</b>。<br>当前本套错题共 <b>${s.wrong.length}</b> 题。`;
   updateStats();
 }
+function jumpToNumber(){
+  if(!currentSetId)return;
+  const n=parseInt($("#jumpInput").value,10);
+  const all=SETS[currentSetId].questions;
+  if(!Number.isFinite(n) || n<1 || n>all.length){
+    alert(`请输入 1-${all.length} 之间的题号。`);
+    return;
+  }
+  currentMode="all";
+  queue=[...all];
+  idx=n-1;
+  state().progress.all=idx;
+  persist();
+  show("quiz");
+  render();
+}
+
 document.querySelectorAll("[data-set]").forEach(b=>b.addEventListener("click",()=>openSet(b.dataset.set)));
 document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>start(b.dataset.mode)));
 $("#backSets").addEventListener("click",()=>{currentSetId=null;$("#topInfo").textContent="请选择题库";show("setHome");});
-$("#submitBtn").addEventListener("click",submit);
+$("#jumpBtn").addEventListener("click",jumpToNumber);
 $("#nextBtn").addEventListener("click",next);
 $("#prevBtn").addEventListener("click",prev);
 $("#modeBtn").addEventListener("click",()=>{updateStats();show("modeHome");});
