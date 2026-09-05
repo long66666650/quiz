@@ -115,7 +115,7 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
 
 <div class="app">
 <section id="home">
-  <div class="hero"><h1>☀️ 铁路刷题题库</h1><p>第一套无限变式保留单选、多选、判断，强化同题关键词和准确选项，并支持上一题；第二套大题加入关键词挖空与好背口诀；第三套保持原题，并在答题后给速记关键词。</p></div>
+  <div class="hero"><h1>☀️ 铁路刷题题库</h1><p>第一套无限变式保留单选、多选、判断，使用原题有效选项并支持上一题；第二套大题加入关键词挖空与好背口诀；第三套保持原题，并在答题后给速记关键词。</p></div>
   <div class="card">
     <button class="setbtn" id="goFirst">第一套 · 无限变式刷题<small>可选单选 / 多选 / 判断 / 混合；支持上一题；选择题只使用本题原有有效选项，不跨题乱拼。</small></button>
     <button class="setbtn" id="goSecond">第二套 · 高级工综合题库<small>选择、判断照常刷；实作、简答、论述、计算支持关键词渐进挖空，并配好背顺口溜/谐音口诀。</small></button>
@@ -379,9 +379,9 @@ function fRender(){
   tn.className="first-type-notice "+(fcur.kind||"single");
   tn.textContent=fcur.kind==="multiple"?"⚠️ 本题为多选题，可选择多个答案":(fcur.kind==="judge"?"本题为判断题":"本题为单选题");
   const qtext=fcur.kind==="judge"?(fcur.question+"\n"+fcur.statement):fcur.question;
-  $("#fQuestion").innerHTML=fKeywordHTML(qtext);$("#fPrev").disabled=fpos===0;
-  fcur.options.forEach(o=>{let l=document.createElement("label");l.className="opt";let inp=document.createElement("input");inp.type=fcur.kind==="multiple"?"checkbox":"radio";inp.name="fans";inp.value=o.key;if((item.selected||[]).includes(o.key))inp.checked=true;let k=document.createElement("span");k.className="key";k.textContent=o.key+".";let t=document.createElement("span");t.innerHTML=fKeywordHTML(o.text);l.append(inp,k,t);$("#fOptions").append(l);inp.onchange=()=>{item.selected=fSel();fGradeChoice()};if(item.answered){if(o.correct)l.classList.add("correct");if(inp.checked&&!o.correct)l.classList.add("wrong");inp.disabled=true}});
-  if(item.answered){let f=$("#fFeedback");f.className="feedback "+(item.ok?"ok":"bad");f.textContent=item.feedback;fShowKeywords(fcur)}
+  $("#fQuestion").textContent=qtext;$("#fPrev").disabled=fpos===0;
+  fcur.options.forEach(o=>{let l=document.createElement("label");l.className="opt";let inp=document.createElement("input");inp.type=fcur.kind==="multiple"?"checkbox":"radio";inp.name="fans";inp.value=o.key;if((item.selected||[]).includes(o.key))inp.checked=true;let k=document.createElement("span");k.className="key";k.textContent=o.key+".";let t=document.createElement("span");t.textContent=o.text;l.append(inp,k,t);$("#fOptions").append(l);inp.onchange=()=>{item.selected=fSel();fGradeChoice()};if(item.answered){if(o.correct)l.classList.add("correct");if(inp.checked&&!o.correct)l.classList.add("wrong");inp.disabled=true}});
+  if(item.answered){let f=$("#fFeedback");f.className="feedback "+(item.ok?"ok":"bad");f.textContent=item.feedback}
 }
 function fNext(){
   clearTimeout(fAutoTimer);
@@ -395,7 +395,7 @@ function eq(a,b){return a.length===b.length&&[...a].sort().every((x,i)=>x===[...
 function fGradeChoice(){
   const item=fhistory[fpos];if(!item||item.answered)return;let sel=fSel(),c=fCor();item.selected=[...sel];if(fcur.kind==="multiple"&&sel.every(k=>c.includes(k))&&!eq(sel,c))return;
   item.answered=true;flock=true;let ok=eq(sel,c);item.ok=ok;fdone++;if(ok)fright++;fStats();
-  const cor=fCorrectText(fcur);item.feedback=ok?"答对了。":"答错了。正确答案："+cor;fRender();
+  const cor=fCorrectText(fcur);item.feedback="正确答案："+cor;fRender();
   if(ok){const ref=item;fAutoTimer=setTimeout(()=>{if(fhistory[fpos]===ref)fNext()},520)}
 }
 function makeQuickMemory(q){
