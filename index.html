@@ -65,6 +65,11 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
 .kw{display:inline;padding:0 2px;border-radius:4px;background:linear-gradient(180deg,transparent 55%,#fff0a8 55%);font-weight:850;color:#284f73}
 .keyword-note,.quick-memory{margin-top:10px;padding:11px 13px;border-radius:14px;background:#eefaf4;border:1px solid #cfead9;color:#2f5f49;line-height:1.7;font-size:14px}
 .keyword-note b,.quick-memory b{color:#23835d}
+
+.first-type-notice{margin:10px 0 8px;padding:9px 12px;border-radius:12px;font-weight:900;font-size:14px;display:inline-block}
+.first-type-notice.single{background:#eef6ff;border:1px solid #cfe3f8;color:#315f8c}
+.first-type-notice.multiple{background:#fff3df;border:1px solid #f0cf95;color:#9a5b00}
+.first-type-notice.judge{background:#f1f8f2;border:1px solid #cfe3d2;color:#357044}
 .actions.first-actions{grid-template-columns:1fr 1fr 1fr}
 @media(max-width:430px){.actions.first-actions{grid-template-columns:1fr 1fr}.actions.first-actions #fNext{grid-column:1/-1}}
 .memo-panel{margin-top:10px;padding:14px;border:1px solid #dfeaf3;border-radius:18px;background:linear-gradient(180deg,#fbfdff 0%,#f5fbff 100%)}
@@ -110,9 +115,9 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
 
 <div class="app">
 <section id="home">
-  <div class="hero"><h1>☀️ 铁路刷题题库</h1><p>第一套无限变式新增关键词填空、关键词强调和上一题；第二套大题加入关键词挖空与好背口诀；第三套保持原题，并在答题后给速记关键词。</p></div>
+  <div class="hero"><h1>☀️ 铁路刷题题库</h1><p>第一套无限变式保留单选、多选、判断，强化同题关键词和准确选项，并支持上一题；第二套大题加入关键词挖空与好背口诀；第三套保持原题，并在答题后给速记关键词。</p></div>
   <div class="card">
-    <button class="setbtn" id="goFirst">第一套 · 无限变式刷题<small>可选单选 / 多选 / 判断 / 关键词填空 / 混合；支持上一题；可选简单 / 一般 / 困难。</small></button>
+    <button class="setbtn" id="goFirst">第一套 · 无限变式刷题<small>可选单选 / 多选 / 判断 / 混合；支持上一题；选择题只使用本题原有有效选项，不跨题乱拼。</small></button>
     <button class="setbtn" id="goSecond">第二套 · 高级工综合题库<small>选择、判断照常刷；实作、简答、论述、计算支持关键词渐进挖空，并配好背顺口溜/谐音口诀。</small></button>
     <button class="setbtn" id="goThird">第三套 · 中级理论知识<small>保持原题型：860 道选择题 + 198 道判断题；答完后显示本题速记关键词。</small></button>
   </div>
@@ -121,19 +126,19 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
 <section id="firstSetup" class="hidden">
   <div class="hero"><h1>第一套 · 无限变式刷题</h1><p>同一套知识点一直变着出，尽量避免连续重复。</p></div>
   <div class="card">
-    <div class="row"><div><label class="title">题型</label><select id="typeSel"><option value="mixed">混合出题</option><option value="single">只练单选</option><option value="multiple">只练多选</option><option value="judge">只练判断</option><option value="fill">只练关键词填空</option></select></div>
+    <div class="row"><div><label class="title">题型</label><select id="typeSel"><option value="mixed">混合出题</option><option value="single">只练单选</option><option value="multiple">只练多选</option><option value="judge">只练判断</option></select></div>
     <div><label class="title">难度</label><select id="diffSel"><option value="easy">简单</option><option value="normal" selected>一般</option><option value="hard">困难</option></select></div></div>
     <button id="startFirst" class="primary start">开始无限刷题</button>
     <button id="firstHome" class="secondary start">返回题库首页</button>
-    <div class="mode-note">混合模式会穿插关键词填空。题干和选项会突出数字、限制词、专业名词等记忆点；简单偏直白，一般正常变式，困难干扰项更接近正确答案。</div>
+    <div class="mode-note">第一套只保留单选、多选、判断和混合，不加填空。单选、多选严格使用当前原题的有效选项，不跨题乱拼无关干扰项；多选题会在题目上方明确提示“多选题，可选择多个答案”。判断题只从同一道题安全变式。</div>
   </div>
 </section>
 
 <section id="firstQuiz" class="card hidden">
   <div class="stats"><div class="stat"><b id="fDone">0</b><span>本轮已做</span></div><div class="stat"><b id="fRight">0</b><span>答对</span></div><div class="stat"><b id="fAcc">0%</b><span>正确率</span></div></div>
-  <div class="meta"><span id="fSerial">第 1 题</span><span id="fTag" class="badge">一般 · 混合</span></div>
-  <div id="fQuestion" class="q"></div><div id="fCloze" class="cloze-box hidden"></div><div id="fOptions"></div>
-  <div id="fFillArea" class="hidden"><input id="fFillInput" type="text" autocomplete="off" placeholder="输入你认为缺少的内容"><button id="fCheckFill" class="primary" style="width:100%;margin-top:10px">检查答案</button></div>
+  <div class="meta"><span id="fSerial">第 1 题</span><span id="fTag" class="badge">一般 · 单选题</span></div>
+  <div id="fTypeNotice" class="first-type-notice single">本题为单选题</div>
+  <div id="fQuestion" class="q"></div><div id="fOptions"></div>
   <div id="fFeedback" class="feedback hidden"></div><div id="fKeywords" class="keyword-note hidden"></div>
   <div class="actions first-actions"><button id="fBack" class="secondary">重新选择</button><button id="fPrev" class="secondary">上一题</button><button id="fNext" class="primary">下一题</button></div>
 </section>
@@ -282,97 +287,106 @@ const $=s=>document.querySelector(s), shuffle=a=>{a=[...a];for(let i=a.length-1;
 function show(id){["home","firstSetup","firstQuiz","secondHome","secondQuiz","thirdHome","thirdQuiz"].forEach(x=>$("#"+x).classList.add("hidden"));$("#"+id).classList.remove("hidden");window.scrollTo(0,0)}
 $("#goFirst").onclick=()=>show("firstSetup");$("#goSecond").onclick=()=>show("secondHome");$("#goThird").onclick=()=>show("thirdHome");$("#firstHome").onclick=()=>show("home");$("#secondBackHome").onclick=()=>show("home");$("#thirdBackHome").onclick=()=>show("home");
 
-// FIRST SET infinite engine — 关键词变式 + 历史上一题
+// FIRST SET infinite engine — 准确选项 + 同题判断变式 + 历史上一题
 let fc={type:"mixed",difficulty:"normal"}, fcur=null, flock=false, fdone=0, fright=0, fserial=0, fbag=[], flast=[], fhistory=[], fpos=-1, fAutoTimer=null;
 function fPool(t){if(t==="single")return ORIGINAL.filter(q=>q.type==="single");if(t==="multiple")return ORIGINAL.filter(q=>q.type==="multiple");return ORIGINAL}
 function fResetBag(){fbag=shuffle(fPool(fc.type).map(q=>q.id))}
 function fPick(){if(!fbag.length)fResetBag();let id=fbag.pop(),n=0;while(flast.includes(id)&&fbag.length&&n<15){fbag.unshift(id);id=fbag.pop();n++}flast.push(id);if(flast.length>18)flast.shift();return ORIGINAL.find(q=>q.id===id)}
-function fHard(id){return HARD.find(q=>q.id===id)||ORIGINAL.find(q=>q.id===id)}
-function fChoice(base){const src=fc.difficulty==="hard"?fHard(base.id):base;let opts=src.options.map(o=>({text:o.text,correct:src.answer.includes(o.key)}));if(fc.difficulty==="easy"&&src.type==="single")opts=[...opts.filter(o=>o.correct),...shuffle(opts.filter(o=>!o.correct)).slice(0,2)];opts=shuffle(opts);return {kind:src.type,question:src.question,options:opts.map((o,i)=>({...o,key:"ABCDEFG"[i]})),sourceId:src.id}}
 
 const F_STOP=new Set(["的","了","和","与","及","或","由","在","对","将","把","为","是","时","后","前","上","下","中","内","外","并","且","则","可","能","等","其","本","该","一个","一种","一般","有关","相应","以及","进行"]);
 const F_TERMS=["必须","不得","不准","严禁","禁止","应当","不应","不小于","不大于","不超过","超过","大于","小于","至少","以上","以下","以内","以外","立即","及时","线路","钢轨","道岔","轨距","水平","高低","轨向","三角坑","曲线","超高","轨枕","扣件","道床","路基","路肩","辙叉","尖轨","护轨","接头","轨缝","天窗","施工","维修","作业","封锁","限速","防护","列车","信号","安全","检查","测量","整修","打磨","锚固","拨道","捣固","更换","设置","确认","登记","通知","处理","标准","容许偏差","速度","距离","宽度","高度","长度","温度","轨温","时间","次数","范围","位置","条件","要求","原则","方法","步骤"];
-function fEsc(x){return String(x??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function fEsc(x){return String(x??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]))}
 function fExtractKeywords(text,max=7){
   const s=String(text||""), out=[];
   const add=x=>{x=String(x||"").trim();if(x&&!F_STOP.has(x)&&!out.includes(x))out.push(x)};
   const nums=s.match(/\d+(?:\.\d+)?\s*(?:km\/h|km|mm|cm|m|℃|%|分钟|小时|分|秒|次|人|处|组|根|个|米|毫米|厘米|度)?/gi)||[];nums.forEach(add);
   [...F_TERMS].sort((a,b)=>b.length-a.length).forEach(k=>{if(s.includes(k))add(k)});
-  if(out.length<max){
-    const chunks=s.match(/[\u3400-\u9fff]{2,6}/g)||[];
-    chunks.sort((a,b)=>b.length-a.length).forEach(x=>{if(out.length<max)add(x)});
-  }
+  if(out.length<max){const chunks=s.match(/[\u3400-\u9fff]{2,6}/g)||[];chunks.sort((a,b)=>b.length-a.length).forEach(x=>{if(out.length<max)add(x)})}
   return out.slice(0,max);
 }
 function fKeywordHTML(text){
-  let html=fEsc(text);
-  let terms=fExtractKeywords(text,10).filter(x=>x.length>0).sort((a,b)=>b.length-a.length);
+  let html=fEsc(text);let terms=fExtractKeywords(text,10).filter(Boolean).sort((a,b)=>b.length-a.length);
   for(const k of terms){const esc=k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');html=html.replace(new RegExp(esc,'g'),m=>`<span class="kw">${m}</span>`)}
   return html;
 }
-function fKeyCandidate(text){
-  const s=String(text||"");
-  let keys=fExtractKeywords(s,12);
-  // 优先数字/单位、限制词和专业词，绝不随机抠“的、了、和”这类无效字
-  keys.sort((a,b)=>{const sa=(/\d/.test(a)?100:0)+(F_TERMS.includes(a)?60:0)+a.length;const sb=(/\d/.test(b)?100:0)+(F_TERMS.includes(b)?60:0)+b.length;return sb-sa});
-  return keys[0]||([...s].filter(ch=>/[A-Za-z0-9\u3400-\u9fff]/.test(ch)).slice(0,Math.min(4,s.length)).join(""));
+
+// 选择题不再使用旧 HARD 跨题拼出的干扰项：只取当前原题自己的选项。
+function fChoice(base){
+  const src=base;
+  let opts=src.options.map(o=>({text:o.text,correct:src.answer.includes(o.key)}));
+  // 难度只改变呈现，不造新答案：简单保留原顺序；一般/困难打乱顺序。
+  if(fc.difficulty!=="easy")opts=shuffle(opts);
+  return {kind:src.type,question:src.question,options:opts.map((o,i)=>({...o,key:"ABCDEFG"[i]})),sourceId:src.id};
 }
-function fFill(base){
-  const src=fc.difficulty==="hard"?fHard(base.id):base;
-  const ct=src.options.filter(o=>src.answer.includes(o.key)).map(o=>o.text), full=ct.join("；");
-  const key=fKeyCandidate(full);
-  const idx=full.indexOf(key);
-  const cloze=idx>=0?full.slice(0,idx)+"【____】"+full.slice(idx+key.length):"【____】";
-  return {kind:"fill",question:"根据原题正确结论，补出最关键的记忆点：\n"+src.question,cloze,fillAnswer:key,fullAnswer:full,sourceId:src.id};
+function fReplaceBlank(question,replacement){
+  const q=String(question||"");
+  if(/[（(]\s*[）)]/.test(q))return q.replace(/[（(]\s*[）)]/,replacement);
+  if(/____+|＿{2,}/.test(q))return q.replace(/____+|＿{2,}/,replacement);
+  return "";
 }
 function fJudge(base){
-  const src=fc.difficulty==="hard"?fHard(base.id):base;
-  const correctTexts=src.options.filter(o=>src.answer.includes(o.key)).map(o=>o.text);
-  const wrongTexts=src.options.filter(o=>!src.answer.includes(o.key)).map(o=>o.text);
-  let statement="",truth=true;const useTrue=Math.random() < (fc.difficulty==="easy" ? .65 : .5);
-  if(useTrue || !wrongTexts.length){truth=true;statement=correctTexts.length===1?correctTexts[0]:correctTexts.join("、")}else{truth=false;statement=wrongTexts[Math.floor(Math.random()*wrongTexts.length)]}
-  return {kind:"judge",question:"判断下列说法是否正确：\n"+src.question+"\n\n说法："+statement,options:[{key:"A",text:"正确",correct:truth},{key:"B",text:"错误",correct:!truth}],sourceId:src.id};
+  const src=base;
+  const correct=src.options.filter(o=>src.answer.includes(o.key));
+  const wrong=src.options.filter(o=>!src.answer.includes(o.key));
+  if(!correct.length)return fChoice(src);
+  let truth=Math.random()<(fc.difficulty==="easy"?.65:.5), chosen=[];
+  if(src.type==="single"){
+    const pool=(truth||!wrong.length)?correct:wrong;
+    chosen=[pool[Math.floor(Math.random()*pool.length)].text];
+  }else{
+    if(truth||!wrong.length){chosen=correct.map(o=>o.text)}
+    else{
+      chosen=correct.map(o=>o.text);
+      const replaceIndex=Math.floor(Math.random()*chosen.length);
+      const bad=wrong[Math.floor(Math.random()*wrong.length)].text;
+      chosen[replaceIndex]=bad;
+    }
+  }
+  const replacement=chosen.join("、");
+  const statement=fReplaceBlank(src.question,replacement);
+  // 没有可安全替换的空，就不要硬造判断题，退回本题原选择题。
+  if(!statement)return fChoice(src);
+  return {kind:"judge",question:"判断下列完整表述是否正确：",statement,options:[{key:"A",text:"正确",correct:truth},{key:"B",text:"错误",correct:!truth}],sourceId:src.id};
 }
 function fKind(base){
   if(fc.type!=="mixed")return fc.type;
   const r=Math.random();
   if(r<.22)return"judge";
-  if(r<.40)return"fill";
-  if(base.type==="multiple")return"multiple";
-  return r<.77?"single":"multiple";
+  return base.type;
 }
 function fStats(){$("#fDone").textContent=fdone;$("#fRight").textContent=fright;$("#fAcc").textContent=fdone?Math.round(fright/fdone*100)+"%":"0%"}
 function fMakeQuestion(){
   let base=fPick(),kind=fKind(base);
   if(kind==="multiple"&&base.type!=="multiple"){let ms=ORIGINAL.filter(q=>q.type==="multiple");base=ms[Math.floor(Math.random()*ms.length)]}
   if(kind==="single"&&base.type!=="single"){let ss=ORIGINAL.filter(q=>q.type==="single");base=ss[Math.floor(Math.random()*ss.length)]}
-  return kind==="judge"?fJudge(base):kind==="fill"?fFill(base):fChoice(base);
+  return kind==="judge"?fJudge(base):fChoice(base);
 }
-function fCorrectText(cur){if(cur.kind==="fill")return cur.fullAnswer||cur.fillAnswer;return cur.options.filter(o=>o.correct).map(o=>o.text).join("、")}
+function fCorrectText(cur){return cur.options.filter(o=>o.correct).map(o=>o.text).join("、")}
 function fShowKeywords(cur){
-  const keys=fExtractKeywords(fCorrectText(cur),7),box=$("#fKeywords");
+  const source=cur.kind==="judge"?(cur.statement+" "+fCorrectText(cur)):(cur.question+" "+fCorrectText(cur));
+  const keys=fExtractKeywords(source,7),box=$("#fKeywords");
   if(!keys.length){box.classList.add("hidden");return}
   box.innerHTML='<b>🧠 本题记忆关键词：</b> '+keys.map(x=>`<span class="kw">${fEsc(x)}</span>`).join(" · ");box.classList.remove("hidden");
 }
 function fRender(){
   clearTimeout(fAutoTimer);if(fpos<0||!fhistory[fpos])return;
   const item=fhistory[fpos];fcur=item.cur;flock=!!item.answered;
-  $("#fFeedback").className="feedback hidden";$("#fKeywords").classList.add("hidden");$("#fOptions").innerHTML="";$("#fFillArea").classList.add("hidden");$("#fCloze").classList.add("hidden");
+  $("#fFeedback").className="feedback hidden";$("#fKeywords").classList.add("hidden");$("#fOptions").innerHTML="";
   $("#fSerial").textContent="第 "+item.serial+" 题";
-  $("#fTag").textContent=({easy:"简单",normal:"一般",hard:"困难"}[fc.difficulty])+" · "+({mixed:"混合",single:"单选",multiple:"多选",judge:"判断",fill:"关键词填空"}[fc.type]);
-  $("#fQuestion").innerHTML=fKeywordHTML(fcur.question);$("#fPrev").disabled=fpos===0;
-  if(fcur.kind==="fill"){
-    $("#fCloze").innerHTML=fKeywordHTML(fcur.cloze);$("#fCloze").classList.remove("hidden");$("#fFillArea").classList.remove("hidden");$("#fFillInput").value=item.fillValue||"";$("#fFillInput").disabled=!!item.answered;$("#fCheckFill").disabled=!!item.answered;
-    if(item.answered){let f=$("#fFeedback");f.className="feedback "+(item.ok?"ok":"bad");f.textContent=item.feedback;fShowKeywords(fcur)}
-    return;
-  }
+  const actualTypeLabel={single:"单选题",multiple:"多选题",judge:"判断题"}[fcur.kind]||"选择题";
+  $("#fTag").textContent=({easy:"简单",normal:"一般",hard:"困难"}[fc.difficulty])+" · "+actualTypeLabel;
+  const tn=$("#fTypeNotice");
+  tn.className="first-type-notice "+(fcur.kind||"single");
+  tn.textContent=fcur.kind==="multiple"?"⚠️ 本题为多选题，可选择多个答案":(fcur.kind==="judge"?"本题为判断题":"本题为单选题");
+  const qtext=fcur.kind==="judge"?(fcur.question+"\n"+fcur.statement):fcur.question;
+  $("#fQuestion").innerHTML=fKeywordHTML(qtext);$("#fPrev").disabled=fpos===0;
   fcur.options.forEach(o=>{let l=document.createElement("label");l.className="opt";let inp=document.createElement("input");inp.type=fcur.kind==="multiple"?"checkbox":"radio";inp.name="fans";inp.value=o.key;if((item.selected||[]).includes(o.key))inp.checked=true;let k=document.createElement("span");k.className="key";k.textContent=o.key+".";let t=document.createElement("span");t.innerHTML=fKeywordHTML(o.text);l.append(inp,k,t);$("#fOptions").append(l);inp.onchange=()=>{item.selected=fSel();fGradeChoice()};if(item.answered){if(o.correct)l.classList.add("correct");if(inp.checked&&!o.correct)l.classList.add("wrong");inp.disabled=true}});
   if(item.answered){let f=$("#fFeedback");f.className="feedback "+(item.ok?"ok":"bad");f.textContent=item.feedback;fShowKeywords(fcur)}
 }
 function fNext(){
   clearTimeout(fAutoTimer);
   if(fpos<fhistory.length-1){fpos++;fRender();return}
-  fserial++;fhistory.push({serial:fserial,cur:fMakeQuestion(),answered:false,selected:[],fillValue:"",ok:null,feedback:""});fpos=fhistory.length-1;fRender();
+  fserial++;fhistory.push({serial:fserial,cur:fMakeQuestion(),answered:false,selected:[],ok:null,feedback:""});fpos=fhistory.length-1;fRender();
 }
 function fPrev(){clearTimeout(fAutoTimer);if(fpos>0){fpos--;fRender()}}
 function fSel(){return[...document.querySelectorAll('#fOptions input:checked')].map(x=>x.value)}
@@ -384,10 +398,6 @@ function fGradeChoice(){
   const cor=fCorrectText(fcur);item.feedback=ok?"答对了。":"答错了。正确答案："+cor;fRender();
   if(ok){const ref=item;fAutoTimer=setTimeout(()=>{if(fhistory[fpos]===ref)fNext()},520)}
 }
-function norm(s){return String(s).replace(/[\s，,。；;、：:（）()【】\[\]]/g,"").toLowerCase()}
-function fGradeFill(){
-  const item=fhistory[fpos];if(!item||item.answered)return;let v=$("#fFillInput").value.trim();if(!v)return alert("先填一下关键词。");item.fillValue=v;item.answered=true;flock=true;let ok=norm(v)===norm(fcur.fillAnswer);item.ok=ok;fdone++;if(ok)fright++;fStats();item.feedback=ok?"答对了。":"答案不对。关键词应填："+fcur.fillAnswer+"。完整正确答案："+fcur.fullAnswer;fRender();if(ok){const ref=item;fAutoTimer=setTimeout(()=>{if(fhistory[fpos]===ref)fNext()},650)}
-}
 function makeQuickMemory(q){
   const cor=q.type==="qa"?(q.qa_answer||""):(q.options||[]).filter(o=>(q.answer||[]).includes(o.key)).map(o=>o.text).join("；");
   const base=(cor&&!/^(正确（?√?）?|错误（?×?）?)$/.test(cor))?cor+" "+q.question:q.question;
@@ -396,7 +406,7 @@ function makeQuickMemory(q){
   return keys.length?"🧠 速记："+keys.join(" · ")+tail:"";
 }
 $("#startFirst").onclick=()=>{fc.type=$("#typeSel").value;fc.difficulty=$("#diffSel").value;fdone=fright=fserial=0;flast=[];fhistory=[];fpos=-1;fResetBag();fStats();show("firstQuiz");fNext()};
-$("#fNext").onclick=fNext;$("#fPrev").onclick=fPrev;$("#fBack").onclick=()=>show("firstSetup");$("#fCheckFill").onclick=fGradeFill;
+$("#fNext").onclick=fNext;$("#fPrev").onclick=fPrev;$("#fBack").onclick=()=>show("firstSetup");
 
 // SECOND SET engine + progressive memorization for big questions
 const SKEY="rail_quiz_second_unchanged_v1";
