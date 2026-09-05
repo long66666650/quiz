@@ -130,7 +130,7 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
     <div><label class="title">难度</label><select id="diffSel"><option value="easy">简单</option><option value="normal" selected>一般</option><option value="hard">困难</option></select></div></div>
     <button id="startFirst" class="primary start">开始无限刷题</button>
     <button id="firstHome" class="secondary start">返回题库首页</button>
-    <div class="mode-note">第一套只保留单选、多选、判断和混合，不加填空。单选、多选严格使用当前原题的有效选项，不跨题乱拼无关干扰项；多选题会在题目上方明确提示“多选题，可选择多个答案”。判断题只从同一道题安全变式。</div>
+    <div class="mode-note">第一套只保留单选、多选、判断和混合，不加填空。单选、多选严格使用当前原题的有效选项，不跨题乱拼无关干扰项；多选题会在题目上方明确提示。选择题答完显示笔记原话；判断题答错时显示正确解析和正确表述。</div>
   </div>
 </section>
 
@@ -346,7 +346,7 @@ function fJudge(base){
   const statement=fReplaceBlank(src.question,replacement);
   // 没有可安全替换的空，就不要硬造判断题，退回本题原选择题。
   if(!statement)return fChoice(src);
-  return {kind:"judge",question:"判断下列完整表述是否正确：",statement,options:[{key:"A",text:"正确",correct:truth},{key:"B",text:"错误",correct:!truth}],sourceId:src.id};
+  return {kind:"judge",question:"判断下列完整表述是否正确：",statement,options:[{key:"A",text:"正确",correct:truth},{key:"B",text:"错误",correct:!truth}],sourceId:src.id,judgeTruth:truth,judgeUsed:replacement,judgeCorrect:correct.map(o=>o.text).join("、")};
 }
 function fKind(base){
   if(fc.type!=="mixed")return fc.type;
@@ -362,11 +362,39 @@ function fMakeQuestion(){
   return kind==="judge"?fJudge(base):fChoice(base);
 }
 function fCorrectText(cur){return cur.options.filter(o=>o.correct).map(o=>o.text).join("、")}
-function fShowKeywords(cur){
-  const source=cur.kind==="judge"?(cur.statement+" "+fCorrectText(cur)):(cur.question+" "+fCorrectText(cur));
-  const keys=fExtractKeywords(source,7),box=$("#fKeywords");
-  if(!keys.length){box.classList.add("hidden");return}
-  box.innerHTML='<b>🧠 本题记忆关键词：</b> '+keys.map(x=>`<span class="kw">${fEsc(x)}</span>`).join(" · ");box.classList.remove("hidden");
+function fSourceQuestion(cur){return ORIGINAL.find(q=>q.id===cur.sourceId)||null}
+function fCompletedSourceText(cur){
+  const src=fSourceQuestion(cur);if(!src)return"";
+  const correct=(src.options||[]).filter(o=>(src.answer||[]).includes(o.key)).map(o=>o.text).join("、");
+  const completed=fReplaceBlank(src.question,correct);
+  return completed||((src.question||"")+(correct?(" 正确内容："+correct):""));
+}
+function fRenderFirstNote(item){
+  const box=$("#fKeywords");box.classList.add("hidden");box.innerHTML="";
+  if(!item||!item.answered||!item.cur)return;
+  const cur=item.cur;
+  if(cur.kind==="judge"){
+    if(item.ok)return;
+    const full=fCompletedSourceText(cur);
+    let why="";
+    if(cur.judgeTruth===false){
+      if(cur.judgeUsed&&cur.judgeCorrect&&cur.judgeUsed!==cur.judgeCorrect){
+        why=`这句话错在把笔记中的「${fEsc(cur.judgeCorrect)}」换成了「${fEsc(cur.judgeUsed)}」。`;
+      }else{
+        why="这句话与笔记原意不一致，所以应判断为“错误”。";
+      }
+    }else{
+      why="这句话本身与笔记原意一致，所以应判断为“正确”。";
+    }
+    box.innerHTML=`<b>✅ 正确解析：</b>${why}${full?`<br><b>正确表述：</b>${fEsc(full)}`:""}`;
+    box.classList.remove("hidden");
+    return;
+  }
+  const full=fCompletedSourceText(cur);
+  if(full){
+    box.innerHTML=`<b>📒 笔记原话：</b>${fEsc(full)}`;
+    box.classList.remove("hidden");
+  }
 }
 function fRender(){
   clearTimeout(fAutoTimer);if(fpos<0||!fhistory[fpos])return;
@@ -381,7 +409,7 @@ function fRender(){
   const qtext=fcur.kind==="judge"?(fcur.question+"\n"+fcur.statement):fcur.question;
   $("#fQuestion").textContent=qtext;$("#fPrev").disabled=fpos===0;
   fcur.options.forEach(o=>{let l=document.createElement("label");l.className="opt";let inp=document.createElement("input");inp.type=fcur.kind==="multiple"?"checkbox":"radio";inp.name="fans";inp.value=o.key;if((item.selected||[]).includes(o.key))inp.checked=true;let k=document.createElement("span");k.className="key";k.textContent=o.key+".";let t=document.createElement("span");t.textContent=o.text;l.append(inp,k,t);$("#fOptions").append(l);inp.onchange=()=>{item.selected=fSel();fGradeChoice()};if(item.answered){if(o.correct)l.classList.add("correct");if(inp.checked&&!o.correct)l.classList.add("wrong");inp.disabled=true}});
-  if(item.answered){let f=$("#fFeedback");f.className="feedback "+(item.ok?"ok":"bad");f.textContent=item.feedback}
+  if(item.answered){let f=$("#fFeedback");f.className="feedback "+(item.ok?"ok":"bad");f.textContent=item.feedback;fRenderFirstNote(item)}
 }
 function fNext(){
   clearTimeout(fAutoTimer);
