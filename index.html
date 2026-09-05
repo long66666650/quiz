@@ -60,6 +60,37 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
   color:#6b7c8b;font-size:12px;word-break:break-all;
 }
 
+
+/* 第一套关键词强调 + 第二/三套速记 */
+.kw{display:inline;padding:0 2px;border-radius:4px;background:linear-gradient(180deg,transparent 55%,#fff0a8 55%);font-weight:850;color:#284f73}
+.keyword-note,.quick-memory{margin-top:10px;padding:11px 13px;border-radius:14px;background:#eefaf4;border:1px solid #cfead9;color:#2f5f49;line-height:1.7;font-size:14px}
+.keyword-note b,.quick-memory b{color:#23835d}
+.actions.first-actions{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:430px){.actions.first-actions{grid-template-columns:1fr 1fr}.actions.first-actions #fNext{grid-column:1/-1}}
+.memo-panel{margin-top:10px;padding:14px;border:1px solid #dfeaf3;border-radius:18px;background:linear-gradient(180deg,#fbfdff 0%,#f5fbff 100%)}
+.memo-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.memo-head b{font-size:16px;color:#315f8c}.memo-head span{font-size:12px;color:#6f8190}
+.memo-answer{padding:15px;border-radius:15px;background:#fff9e8;border:1px solid #f1dda0;line-height:1.9;font-size:17px;white-space:pre-wrap;word-break:break-word;min-height:78px}
+.memo-answer .blank{letter-spacing:.06em;color:#476987;font-weight:800}
+.memo-controls{margin-top:12px;display:grid;gap:10px}
+.memo-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.memo-presets button{min-height:39px;padding:8px 6px;font-size:13px;background:#eef6fb;color:#31506b}
+.memo-presets button.active{background:linear-gradient(135deg,#5aa7ff,#6f7cff);color:#fff}
+.memo-range-row{display:flex;align-items:center;gap:9px}
+.memo-range-row input[type=range]{flex:1;min-width:0;accent-color:#5b8fff}
+.memo-count{min-width:94px;text-align:right;color:#536d82;font-size:13px;font-weight:700}
+.memo-step{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.memo-step button{min-height:42px}
+.memo-tip{font-size:12px;color:#6f8190;line-height:1.6;padding-top:2px}
+.memo-empty{display:flex;align-items:center;justify-content:center;min-height:60px;color:#8093a3;font-weight:700;text-align:center}
+
+.memo-rhyme{margin-top:10px;padding:13px 14px;border-radius:15px;background:#eefaf4;border:1px solid #cfead9;line-height:1.8;color:#2f5f49}
+.memo-rhyme-title{font-size:14px;font-weight:900;color:#23835d;margin-bottom:5px}
+.memo-rhyme-text{font-size:16px;font-weight:800;letter-spacing:.02em;word-break:break-word}
+.memo-rhyme-note{font-size:12px;color:#648374;margin-top:5px;font-weight:500}
+@media(max-width:420px){.memo-presets{grid-template-columns:repeat(2,1fr)}.memo-answer{font-size:16px}.memo-count{min-width:82px}}
+
+
 </style>
 </head>
 <body>
@@ -79,22 +110,22 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
 
 <div class="app">
 <section id="home">
-  <div class="hero"><h1>☀️ 铁路刷题题库</h1><p>第一套做成无限变式练习，可选单选、多选、判断；第二套保持原来的 369 题和原题型，不做改动。</p></div>
+  <div class="hero"><h1>☀️ 铁路刷题题库</h1><p>第一套无限变式新增关键词填空、关键词强调和上一题；第二套大题加入关键词挖空与好背口诀；第三套保持原题，并在答题后给速记关键词。</p></div>
   <div class="card">
-    <button class="setbtn" id="goFirst">第一套 · 无限变式刷题<small>可选单选 / 多选 / 判断 / 混合；可选简单 / 一般 / 困难。</small></button>
-    <button class="setbtn" id="goSecond">第二套 · 高级工综合题库<small>保持原版：选择、判断点选判题；填空、实作、简答、论述、计算直接看原题和答案。</small></button>
-    <button class="setbtn" id="goThird">第三套 · 中级理论知识<small>保持原题型：860 道选择题 + 198 道判断题，共 1058 题。</small></button>
+    <button class="setbtn" id="goFirst">第一套 · 无限变式刷题<small>可选单选 / 多选 / 判断 / 关键词填空 / 混合；支持上一题；可选简单 / 一般 / 困难。</small></button>
+    <button class="setbtn" id="goSecond">第二套 · 高级工综合题库<small>选择、判断照常刷；实作、简答、论述、计算支持关键词渐进挖空，并配好背顺口溜/谐音口诀。</small></button>
+    <button class="setbtn" id="goThird">第三套 · 中级理论知识<small>保持原题型：860 道选择题 + 198 道判断题；答完后显示本题速记关键词。</small></button>
   </div>
 </section>
 
 <section id="firstSetup" class="hidden">
   <div class="hero"><h1>第一套 · 无限变式刷题</h1><p>同一套知识点一直变着出，尽量避免连续重复。</p></div>
   <div class="card">
-    <div class="row"><div><label class="title">题型</label><select id="typeSel"><option value="mixed">混合出题</option><option value="single">只练单选</option><option value="multiple">只练多选</option><option value="judge">只练判断</option></select></div>
+    <div class="row"><div><label class="title">题型</label><select id="typeSel"><option value="mixed">混合出题</option><option value="single">只练单选</option><option value="multiple">只练多选</option><option value="judge">只练判断</option><option value="fill">只练关键词填空</option></select></div>
     <div><label class="title">难度</label><select id="diffSel"><option value="easy">简单</option><option value="normal" selected>一般</option><option value="hard">困难</option></select></div></div>
     <button id="startFirst" class="primary start">开始无限刷题</button>
-    <button id="firstHome" class="secondary start">返回两套题库</button>
-    <div class="mode-note">简单：判断题改动较直白；一般：正常变式；困难：判断题会用更容易混淆的表述，选择题干扰项也更接近正确答案。</div>
+    <button id="firstHome" class="secondary start">返回题库首页</button>
+    <div class="mode-note">混合模式会穿插关键词填空。题干和选项会突出数字、限制词、专业名词等记忆点；简单偏直白，一般正常变式，困难干扰项更接近正确答案。</div>
   </div>
 </section>
 
@@ -103,17 +134,18 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
   <div class="meta"><span id="fSerial">第 1 题</span><span id="fTag" class="badge">一般 · 混合</span></div>
   <div id="fQuestion" class="q"></div><div id="fCloze" class="cloze-box hidden"></div><div id="fOptions"></div>
   <div id="fFillArea" class="hidden"><input id="fFillInput" type="text" autocomplete="off" placeholder="输入你认为缺少的内容"><button id="fCheckFill" class="primary" style="width:100%;margin-top:10px">检查答案</button></div>
-  <div id="fFeedback" class="feedback hidden"></div>
-  <div class="actions"><button id="fBack" class="secondary">重新选择</button><button id="fNext" class="primary">换一道</button></div>
+  <div id="fFeedback" class="feedback hidden"></div><div id="fKeywords" class="keyword-note hidden"></div>
+  <div class="actions first-actions"><button id="fBack" class="secondary">重新选择</button><button id="fPrev" class="secondary">上一题</button><button id="fNext" class="primary">下一题</button></div>
 </section>
 
 <section id="secondHome" class="hidden">
-  <div class="hero"><h1>第二套 · 高级工综合题库</h1><p>第二套保持原版，不改变题目和题型。</p></div>
+  <div class="hero"><h1>第二套 · 高级工综合题库</h1><p>原题不改；大题支持完整答案 → 挖20% → 挖50% → 挖80% → 全挖，并配真正好背的顺口溜/谐音口诀。</p></div>
   <div class="card">
     <button class="setbtn sMode" data-mode="all">顺序练习<small>从上次位置继续。</small></button>
+    <button class="setbtn sMode" data-mode="big">📖 大题背诵<small>只练实作、简答、论述、计算题；完整答案下直接看好背口诀，再逐级挖空。</small></button>
     <button class="setbtn sMode" data-mode="random">随机练习<small>随机顺序，进度单独保存。</small></button>
     <button class="setbtn sMode" data-mode="wrong">错题重练<small>只练做错的选择/判断题。</small></button>
-    <button class="secondary start" id="secondBackHome">返回两套题库</button>
+    <button class="secondary start" id="secondBackHome">返回题库首页</button>
   </div>
 </section>
 
@@ -121,13 +153,13 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
   <div class="meta"><span id="sPos">第 1 / 369 题</span><span id="sSource" class="badge"></span></div>
   <div class="progress"><div id="sBar"></div></div>
   <div id="sQuestion" class="q"></div><div id="sOptions"></div><div id="sQaAnswer" class="qa-answer hidden"></div>
-  <div id="sFeedback" class="feedback hidden"></div>
+  <div id="sFeedback" class="feedback hidden"></div><div id="sMemory" class="quick-memory hidden"></div>
   <div class="actions"><button id="sPrev" class="secondary">上一题</button><button id="sPaletteBtn" class="secondary">题号导航</button><button id="sNext" class="primary">下一题</button></div>
   <div id="sPaletteWrap" class="hidden"><div class="palette" id="sPalette"></div></div>
   <button id="sExit" class="secondary start">退出本套</button>
 </section>
 <section id="thirdHome" class="hidden">
-  <div class="hero"><h1>第三套 · 中级理论知识</h1><p>保持你提供的原题型：860 道选择题 + 198 道判断题，共 1058 题。</p></div>
+  <div class="hero"><h1>第三套 · 中级理论知识</h1><p>保持你提供的原题型：860 道选择题 + 198 道判断题，共 1058 题；答题后会显示速记关键词。</p></div>
   <div class="card">
     <button class="setbtn tMode" data-mode="all">顺序练习<small>从上次位置继续。</small></button>
     <button class="setbtn tMode" data-mode="random">随机练习<small>随机顺序，进度单独保存。</small></button>
@@ -140,7 +172,7 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
   <div class="meta"><span id="tPos">第 1 / 1058 题</span><span id="tSource" class="badge"></span></div>
   <div class="progress"><div id="tBar"></div></div>
   <div id="tQuestion" class="q"></div><div id="tOptions"></div>
-  <div id="tFeedback" class="feedback hidden"></div>
+  <div id="tFeedback" class="feedback hidden"></div><div id="tMemory" class="quick-memory hidden"></div>
   <div class="actions"><button id="tPrev" class="secondary">上一题</button><button id="tPaletteBtn" class="secondary">题号导航</button><button id="tNext" class="primary">下一题</button></div>
   <div id="tPaletteWrap" class="hidden"><div class="palette" id="tPalette"></div></div>
   <button id="tExit" class="secondary start">退出本套</button>
@@ -198,11 +230,12 @@ async function initLicenseGate(){
   const btn=document.getElementById("licenseBtn");
   const msg=document.getElementById("licenseMsg");
 
-  if(await verifyExistingActivation()){
+  // 兼容旧版本：只要这个站点/浏览器里已经保存过 v2 激活凭证，就永久认可，绝不因升级或网络波动清掉。
+  // ACTIVATION_TOKEN_KEY / DEVICE_ID_KEY 与旧版完全一致，所以在同一个网址直接替换 index.html 时，老用户无需重新激活。
+  const oldToken=localStorage.getItem(ACTIVATION_TOKEN_KEY);
+  if(oldToken){
     screen.classList.add("hidden");
     return;
-  }else{
-    localStorage.removeItem(ACTIVATION_TOKEN_KEY);
   }
 
   async function go(){
@@ -220,7 +253,7 @@ async function initLicenseGate(){
       if(res && res.ok===true && res.token){
         localStorage.setItem(ACTIVATION_TOKEN_KEY,res.token);
         msg.className="lock-msg ok";
-        msg.textContent="激活成功。这个密码已经失效，本机以后会自动进入。";
+        msg.textContent="激活成功。本机凭证会一直保留，以后升级网站也不需要重新激活。";
         setTimeout(()=>screen.classList.add("hidden"),600);
       }else{
         msg.className="lock-msg bad";
@@ -249,65 +282,414 @@ const $=s=>document.querySelector(s), shuffle=a=>{a=[...a];for(let i=a.length-1;
 function show(id){["home","firstSetup","firstQuiz","secondHome","secondQuiz","thirdHome","thirdQuiz"].forEach(x=>$("#"+x).classList.add("hidden"));$("#"+id).classList.remove("hidden");window.scrollTo(0,0)}
 $("#goFirst").onclick=()=>show("firstSetup");$("#goSecond").onclick=()=>show("secondHome");$("#goThird").onclick=()=>show("thirdHome");$("#firstHome").onclick=()=>show("home");$("#secondBackHome").onclick=()=>show("home");$("#thirdBackHome").onclick=()=>show("home");
 
-// FIRST SET infinite engine
-let fc={type:"mixed",difficulty:"normal"}, fcur=null, flock=false, fdone=0, fright=0, fserial=0, fbag=[], flast=[];
+// FIRST SET infinite engine — 关键词变式 + 历史上一题
+let fc={type:"mixed",difficulty:"normal"}, fcur=null, flock=false, fdone=0, fright=0, fserial=0, fbag=[], flast=[], fhistory=[], fpos=-1, fAutoTimer=null;
 function fPool(t){if(t==="single")return ORIGINAL.filter(q=>q.type==="single");if(t==="multiple")return ORIGINAL.filter(q=>q.type==="multiple");return ORIGINAL}
 function fResetBag(){fbag=shuffle(fPool(fc.type).map(q=>q.id))}
 function fPick(){if(!fbag.length)fResetBag();let id=fbag.pop(),n=0;while(flast.includes(id)&&fbag.length&&n<15){fbag.unshift(id);id=fbag.pop();n++}flast.push(id);if(flast.length>18)flast.shift();return ORIGINAL.find(q=>q.id===id)}
 function fHard(id){return HARD.find(q=>q.id===id)||ORIGINAL.find(q=>q.id===id)}
 function fChoice(base){const src=fc.difficulty==="hard"?fHard(base.id):base;let opts=src.options.map(o=>({text:o.text,correct:src.answer.includes(o.key)}));if(fc.difficulty==="easy"&&src.type==="single")opts=[...opts.filter(o=>o.correct),...shuffle(opts.filter(o=>!o.correct)).slice(0,2)];opts=shuffle(opts);return {kind:src.type,question:src.question,options:opts.map((o,i)=>({...o,key:"ABCDEFG"[i]})),sourceId:src.id}}
-function mask(s,d){s=String(s).trim();if(s.length<=2)return{display:"【____】",answer:s};let min=d==="easy"?1:d==="normal"?2:Math.max(2,Math.floor(s.length*.35));let max=d==="easy"?Math.min(2,s.length-1):d==="normal"?Math.min(4,s.length-1):Math.max(min,Math.floor(s.length*.65));let len=Math.min(s.length,min+Math.floor(Math.random()*(max-min+1))),start=Math.floor(Math.random()*(s.length-len+1));return{display:s.slice(0,start)+"【____】"+s.slice(start+len),answer:s.slice(start,start+len)}}
-function fFill(base){let ct=base.options.filter(o=>base.answer.includes(o.key)).map(o=>o.text),full=ct.join("；"),r=Math.floor(Math.random()*4);if(fc.difficulty==="hard"&&Math.random()<.45)r=3;if(r===2&&ct.length>1){let i=Math.floor(Math.random()*ct.length);return{kind:"fill",question:"多项正确结论里挖掉一项，请补出来：\n"+base.question,cloze:ct.map((t,j)=>i===j?"【____】":t).join("；"),fillAnswer:ct[i],fullAnswer:full}}if(r===3)return{kind:"fill",question:"直接写出这道题的正确答案：\n"+base.question,cloze:"【请填写完整正确答案】",fillAnswer:full,fullAnswer:full};let m=mask(full,fc.difficulty);return{kind:"fill",question:"根据原题正确结论，补全空缺：\n"+base.question,cloze:m.display,fillAnswer:m.answer,fullAnswer:full}}
+
+const F_STOP=new Set(["的","了","和","与","及","或","由","在","对","将","把","为","是","时","后","前","上","下","中","内","外","并","且","则","可","能","等","其","本","该","一个","一种","一般","有关","相应","以及","进行"]);
+const F_TERMS=["必须","不得","不准","严禁","禁止","应当","不应","不小于","不大于","不超过","超过","大于","小于","至少","以上","以下","以内","以外","立即","及时","线路","钢轨","道岔","轨距","水平","高低","轨向","三角坑","曲线","超高","轨枕","扣件","道床","路基","路肩","辙叉","尖轨","护轨","接头","轨缝","天窗","施工","维修","作业","封锁","限速","防护","列车","信号","安全","检查","测量","整修","打磨","锚固","拨道","捣固","更换","设置","确认","登记","通知","处理","标准","容许偏差","速度","距离","宽度","高度","长度","温度","轨温","时间","次数","范围","位置","条件","要求","原则","方法","步骤"];
+function fEsc(x){return String(x??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function fExtractKeywords(text,max=7){
+  const s=String(text||""), out=[];
+  const add=x=>{x=String(x||"").trim();if(x&&!F_STOP.has(x)&&!out.includes(x))out.push(x)};
+  const nums=s.match(/\d+(?:\.\d+)?\s*(?:km\/h|km|mm|cm|m|℃|%|分钟|小时|分|秒|次|人|处|组|根|个|米|毫米|厘米|度)?/gi)||[];nums.forEach(add);
+  [...F_TERMS].sort((a,b)=>b.length-a.length).forEach(k=>{if(s.includes(k))add(k)});
+  if(out.length<max){
+    const chunks=s.match(/[\u3400-\u9fff]{2,6}/g)||[];
+    chunks.sort((a,b)=>b.length-a.length).forEach(x=>{if(out.length<max)add(x)});
+  }
+  return out.slice(0,max);
+}
+function fKeywordHTML(text){
+  let html=fEsc(text);
+  let terms=fExtractKeywords(text,10).filter(x=>x.length>0).sort((a,b)=>b.length-a.length);
+  for(const k of terms){const esc=k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');html=html.replace(new RegExp(esc,'g'),m=>`<span class="kw">${m}</span>`)}
+  return html;
+}
+function fKeyCandidate(text){
+  const s=String(text||"");
+  let keys=fExtractKeywords(s,12);
+  // 优先数字/单位、限制词和专业词，绝不随机抠“的、了、和”这类无效字
+  keys.sort((a,b)=>{const sa=(/\d/.test(a)?100:0)+(F_TERMS.includes(a)?60:0)+a.length;const sb=(/\d/.test(b)?100:0)+(F_TERMS.includes(b)?60:0)+b.length;return sb-sa});
+  return keys[0]||([...s].filter(ch=>/[A-Za-z0-9\u3400-\u9fff]/.test(ch)).slice(0,Math.min(4,s.length)).join(""));
+}
+function fFill(base){
+  const src=fc.difficulty==="hard"?fHard(base.id):base;
+  const ct=src.options.filter(o=>src.answer.includes(o.key)).map(o=>o.text), full=ct.join("；");
+  const key=fKeyCandidate(full);
+  const idx=full.indexOf(key);
+  const cloze=idx>=0?full.slice(0,idx)+"【____】"+full.slice(idx+key.length):"【____】";
+  return {kind:"fill",question:"根据原题正确结论，补出最关键的记忆点：\n"+src.question,cloze,fillAnswer:key,fullAnswer:full,sourceId:src.id};
+}
 function fJudge(base){
   const src=fc.difficulty==="hard"?fHard(base.id):base;
   const correctTexts=src.options.filter(o=>src.answer.includes(o.key)).map(o=>o.text);
   const wrongTexts=src.options.filter(o=>!src.answer.includes(o.key)).map(o=>o.text);
-  let statement="",truth=true;
-  const useTrue=Math.random() < (fc.difficulty==="easy" ? .65 : .5);
-  if(useTrue || !wrongTexts.length){
-    truth=true;
-    if(correctTexts.length===1) statement=correctTexts[0];
-    else statement=correctTexts.join("、");
-  }else{
-    truth=false;
-    statement=wrongTexts[Math.floor(Math.random()*wrongTexts.length)];
-  }
-  return {
-    kind:"judge",
-    question:"判断下列说法是否正确：\n"+src.question+"\n\n说法："+statement,
-    options:[
-      {key:"A",text:"正确",correct:truth},
-      {key:"B",text:"错误",correct:!truth}
-    ],
-    sourceId:src.id
-  };
+  let statement="",truth=true;const useTrue=Math.random() < (fc.difficulty==="easy" ? .65 : .5);
+  if(useTrue || !wrongTexts.length){truth=true;statement=correctTexts.length===1?correctTexts[0]:correctTexts.join("、")}else{truth=false;statement=wrongTexts[Math.floor(Math.random()*wrongTexts.length)]}
+  return {kind:"judge",question:"判断下列说法是否正确：\n"+src.question+"\n\n说法："+statement,options:[{key:"A",text:"正确",correct:truth},{key:"B",text:"错误",correct:!truth}],sourceId:src.id};
 }
-function fKind(base){if(fc.type!=="mixed")return fc.type;let r=Math.random();if(r<.30)return"judge";if(base.type==="multiple")return"multiple";if(r<.72)return"single";return"multiple"}
+function fKind(base){
+  if(fc.type!=="mixed")return fc.type;
+  const r=Math.random();
+  if(r<.22)return"judge";
+  if(r<.40)return"fill";
+  if(base.type==="multiple")return"multiple";
+  return r<.77?"single":"multiple";
+}
 function fStats(){$("#fDone").textContent=fdone;$("#fRight").textContent=fright;$("#fAcc").textContent=fdone?Math.round(fright/fdone*100)+"%":"0%"}
-function fNext(){flock=false;$("#fFeedback").className="feedback hidden";$("#fOptions").innerHTML="";$("#fFillArea").classList.add("hidden");$("#fCloze").classList.add("hidden");$("#fFillInput").value="";fserial++;let base=fPick(),kind=fKind(base);
-if(kind==="multiple"&&base.type!=="multiple"){let ms=ORIGINAL.filter(q=>q.type==="multiple");base=ms[Math.floor(Math.random()*ms.length)]}if(kind==="single"&&base.type!=="single"){let ss=ORIGINAL.filter(q=>q.type==="single");base=ss[Math.floor(Math.random()*ss.length)]}
-fcur=kind==="judge"?fJudge(base):fChoice(base);$("#fSerial").textContent="第 "+fserial+" 题";$("#fTag").textContent=({easy:"简单",normal:"一般",hard:"困难"}[fc.difficulty])+" · "+({mixed:"混合",single:"单选",multiple:"多选",judge:"判断"}[fc.type]);$("#fQuestion").textContent=fcur.question;
-if(fcur.kind==="fill"){$("#fCloze").textContent=fcur.cloze;$("#fCloze").classList.remove("hidden");$("#fFillArea").classList.remove("hidden");return}
-fcur.options.forEach(o=>{let l=document.createElement("label");l.className="opt";let inp=document.createElement("input");inp.type=fcur.kind==="multiple"?"checkbox":"radio";inp.name="fans";inp.value=o.key;let k=document.createElement("span");k.className="key";k.textContent=o.key+".";let t=document.createElement("span");t.textContent=o.text;l.append(inp,k,t);$("#fOptions").append(l);inp.onchange=()=>fGradeChoice()})}
-function fSel(){return[...document.querySelectorAll('#fOptions input:checked')].map(x=>x.value)}function fCor(){return fcur.options.filter(o=>o.correct).map(o=>o.key)}function eq(a,b){return a.length===b.length&&[...a].sort().every((x,i)=>x===[...b].sort()[i])}
-function fMark(){[...document.querySelectorAll("#fOptions .opt")].forEach((l,i)=>{let o=fcur.options[i],inp=l.querySelector("input");if(o.correct)l.classList.add("correct");if(inp.checked&&!o.correct)l.classList.add("wrong");inp.disabled=true})}
-function fGradeChoice(){if(flock)return;let s=fSel(),c=fCor();if(fcur.kind==="multiple"&&s.every(k=>c.includes(k))&&!eq(s,c))return;flock=true;let ok=eq(s,c);fdone++;if(ok)fright++;fStats();fMark();let f=$("#fFeedback");f.className="feedback "+(ok?"ok":"bad");f.textContent=ok?"答对了。":"答错了。正确答案："+fcur.options.filter(o=>o.correct).map(o=>o.text).join("、");if(ok)setTimeout(fNext,280)}
+function fMakeQuestion(){
+  let base=fPick(),kind=fKind(base);
+  if(kind==="multiple"&&base.type!=="multiple"){let ms=ORIGINAL.filter(q=>q.type==="multiple");base=ms[Math.floor(Math.random()*ms.length)]}
+  if(kind==="single"&&base.type!=="single"){let ss=ORIGINAL.filter(q=>q.type==="single");base=ss[Math.floor(Math.random()*ss.length)]}
+  return kind==="judge"?fJudge(base):kind==="fill"?fFill(base):fChoice(base);
+}
+function fCorrectText(cur){if(cur.kind==="fill")return cur.fullAnswer||cur.fillAnswer;return cur.options.filter(o=>o.correct).map(o=>o.text).join("、")}
+function fShowKeywords(cur){
+  const keys=fExtractKeywords(fCorrectText(cur),7),box=$("#fKeywords");
+  if(!keys.length){box.classList.add("hidden");return}
+  box.innerHTML='<b>🧠 本题记忆关键词：</b> '+keys.map(x=>`<span class="kw">${fEsc(x)}</span>`).join(" · ");box.classList.remove("hidden");
+}
+function fRender(){
+  clearTimeout(fAutoTimer);if(fpos<0||!fhistory[fpos])return;
+  const item=fhistory[fpos];fcur=item.cur;flock=!!item.answered;
+  $("#fFeedback").className="feedback hidden";$("#fKeywords").classList.add("hidden");$("#fOptions").innerHTML="";$("#fFillArea").classList.add("hidden");$("#fCloze").classList.add("hidden");
+  $("#fSerial").textContent="第 "+item.serial+" 题";
+  $("#fTag").textContent=({easy:"简单",normal:"一般",hard:"困难"}[fc.difficulty])+" · "+({mixed:"混合",single:"单选",multiple:"多选",judge:"判断",fill:"关键词填空"}[fc.type]);
+  $("#fQuestion").innerHTML=fKeywordHTML(fcur.question);$("#fPrev").disabled=fpos===0;
+  if(fcur.kind==="fill"){
+    $("#fCloze").innerHTML=fKeywordHTML(fcur.cloze);$("#fCloze").classList.remove("hidden");$("#fFillArea").classList.remove("hidden");$("#fFillInput").value=item.fillValue||"";$("#fFillInput").disabled=!!item.answered;$("#fCheckFill").disabled=!!item.answered;
+    if(item.answered){let f=$("#fFeedback");f.className="feedback "+(item.ok?"ok":"bad");f.textContent=item.feedback;fShowKeywords(fcur)}
+    return;
+  }
+  fcur.options.forEach(o=>{let l=document.createElement("label");l.className="opt";let inp=document.createElement("input");inp.type=fcur.kind==="multiple"?"checkbox":"radio";inp.name="fans";inp.value=o.key;if((item.selected||[]).includes(o.key))inp.checked=true;let k=document.createElement("span");k.className="key";k.textContent=o.key+".";let t=document.createElement("span");t.innerHTML=fKeywordHTML(o.text);l.append(inp,k,t);$("#fOptions").append(l);inp.onchange=()=>{item.selected=fSel();fGradeChoice()};if(item.answered){if(o.correct)l.classList.add("correct");if(inp.checked&&!o.correct)l.classList.add("wrong");inp.disabled=true}});
+  if(item.answered){let f=$("#fFeedback");f.className="feedback "+(item.ok?"ok":"bad");f.textContent=item.feedback;fShowKeywords(fcur)}
+}
+function fNext(){
+  clearTimeout(fAutoTimer);
+  if(fpos<fhistory.length-1){fpos++;fRender();return}
+  fserial++;fhistory.push({serial:fserial,cur:fMakeQuestion(),answered:false,selected:[],fillValue:"",ok:null,feedback:""});fpos=fhistory.length-1;fRender();
+}
+function fPrev(){clearTimeout(fAutoTimer);if(fpos>0){fpos--;fRender()}}
+function fSel(){return[...document.querySelectorAll('#fOptions input:checked')].map(x=>x.value)}
+function fCor(){return fcur.options.filter(o=>o.correct).map(o=>o.key)}
+function eq(a,b){return a.length===b.length&&[...a].sort().every((x,i)=>x===[...b].sort()[i])}
+function fGradeChoice(){
+  const item=fhistory[fpos];if(!item||item.answered)return;let sel=fSel(),c=fCor();item.selected=[...sel];if(fcur.kind==="multiple"&&sel.every(k=>c.includes(k))&&!eq(sel,c))return;
+  item.answered=true;flock=true;let ok=eq(sel,c);item.ok=ok;fdone++;if(ok)fright++;fStats();
+  const cor=fCorrectText(fcur);item.feedback=ok?"答对了。":"答错了。正确答案："+cor;fRender();
+  if(ok){const ref=item;fAutoTimer=setTimeout(()=>{if(fhistory[fpos]===ref)fNext()},520)}
+}
 function norm(s){return String(s).replace(/[\s，,。；;、：:（）()【】\[\]]/g,"").toLowerCase()}
-function fGradeFill(){if(flock)return;let v=$("#fFillInput").value.trim();if(!v)return alert("先填一下答案。");flock=true;let ok=norm(v)===norm(fcur.fillAnswer);fdone++;if(ok)fright++;fStats();let f=$("#fFeedback");f.className="feedback "+(ok?"ok":"bad");f.textContent=ok?"答对了。":"答案不对。这个空应填："+fcur.fillAnswer+"。完整正确答案："+fcur.fullAnswer;if(ok)setTimeout(fNext,350)}
-$("#startFirst").onclick=()=>{fc.type=$("#typeSel").value;fc.difficulty=$("#diffSel").value;fdone=fright=fserial=0;flast=[];fResetBag();fStats();show("firstQuiz");fNext()};$("#fNext").onclick=fNext;$("#fBack").onclick=()=>show("firstSetup");$("#fCheckFill").onclick=fGradeFill;
+function fGradeFill(){
+  const item=fhistory[fpos];if(!item||item.answered)return;let v=$("#fFillInput").value.trim();if(!v)return alert("先填一下关键词。");item.fillValue=v;item.answered=true;flock=true;let ok=norm(v)===norm(fcur.fillAnswer);item.ok=ok;fdone++;if(ok)fright++;fStats();item.feedback=ok?"答对了。":"答案不对。关键词应填："+fcur.fillAnswer+"。完整正确答案："+fcur.fullAnswer;fRender();if(ok){const ref=item;fAutoTimer=setTimeout(()=>{if(fhistory[fpos]===ref)fNext()},650)}
+}
+function makeQuickMemory(q){
+  const cor=q.type==="qa"?(q.qa_answer||""):(q.options||[]).filter(o=>(q.answer||[]).includes(o.key)).map(o=>o.text).join("；");
+  const base=(cor&&!/^(正确（?√?）?|错误（?×?）?)$/.test(cor))?cor+" "+q.question:q.question;
+  const keys=fExtractKeywords(base,7);
+  let tail="";if(q.source==="判断题"&&q.answer)tail=" → "+(q.answer.includes("A")?"对":"错");
+  return keys.length?"🧠 速记："+keys.join(" · ")+tail:"";
+}
+$("#startFirst").onclick=()=>{fc.type=$("#typeSel").value;fc.difficulty=$("#diffSel").value;fdone=fright=fserial=0;flast=[];fhistory=[];fpos=-1;fResetBag();fStats();show("firstQuiz");fNext()};
+$("#fNext").onclick=fNext;$("#fPrev").onclick=fPrev;$("#fBack").onclick=()=>show("firstSetup");$("#fCheckFill").onclick=fGradeFill;
 
-// SECOND SET unchanged-style engine
-const SKEY="rail_quiz_second_unchanged_v1";let ss=JSON.parse(localStorage.getItem(SKEY)||'{"done":{},"wrong":[],"progress":{"all":0,"random":0,"wrong":0},"randomOrder":[],"wrongOrder":[]}');
-function saveS(){localStorage.setItem(SKEY,JSON.stringify(ss))}let smode="all",squeue=[],sidx=0,slocked=false;
-function sStart(mode){smode=mode;if(mode==="all")squeue=[...SET2];else if(mode==="random"){if(!ss.randomOrder.length)ss.randomOrder=shuffle(SET2.map(q=>q.id));squeue=ss.randomOrder.map(id=>SET2.find(q=>q.id===id)).filter(Boolean)}else{let ids=ss.wrong.length?ss.wrong:[];ss.wrongOrder=ids;squeue=ids.map(id=>SET2.find(q=>q.id===id)).filter(Boolean);if(!squeue.length)return alert("目前没有错题。")}sidx=Math.min(ss.progress[mode]||0,Math.max(0,squeue.length-1));show("secondQuiz");sRender()}
+// SECOND SET engine + progressive memorization for big questions
+const SKEY="rail_quiz_second_unchanged_v1";
+let ss=JSON.parse(localStorage.getItem(SKEY)||'{"done":{},"wrong":[],"progress":{"all":0,"random":0,"wrong":0,"big":0},"randomOrder":[],"wrongOrder":[]}');
+if(!ss.progress)ss.progress={all:0,random:0,wrong:0,big:0};
+if(ss.progress.big==null)ss.progress.big=0;
+function saveS(){localStorage.setItem(SKEY,JSON.stringify(ss))}
+let smode="all",squeue=[],sidx=0,slocked=false;
+
+const BIG_SOURCES=new Set(["实作题","简答题","论述题","计算题"]);
+const MEMKEY="rail_quiz_second_mem_cloze_v2";
+let memoState=JSON.parse(localStorage.getItem(MEMKEY)||'{}');
+function saveMemo(){localStorage.setItem(MEMKEY,JSON.stringify(memoState))}
+
+function sStart(mode){
+  smode=mode;
+  if(mode==="all") squeue=[...SET2];
+  else if(mode==="big") squeue=SET2.filter(q=>BIG_SOURCES.has(q.source));
+  else if(mode==="random"){
+    if(!ss.randomOrder.length)ss.randomOrder=shuffle(SET2.map(q=>q.id));
+    squeue=ss.randomOrder.map(id=>SET2.find(q=>q.id===id)).filter(Boolean);
+  }else{
+    let ids=ss.wrong.length?ss.wrong:[];
+    ss.wrongOrder=ids;
+    squeue=ids.map(id=>SET2.find(q=>q.id===id)).filter(Boolean);
+    if(!squeue.length)return alert("目前没有错题。");
+  }
+  sidx=Math.min(ss.progress[mode]||0,Math.max(0,squeue.length-1));
+  show("secondQuiz");sRender();
+}
 document.querySelectorAll(".sMode").forEach(b=>b.onclick=()=>sStart(b.dataset.mode));
-function sRender(){if(!squeue.length)return;let q=squeue[sidx];slocked=false;ss.progress[smode]=sidx;saveS();$("#sPos").textContent=`第 ${sidx+1} / ${squeue.length} 题`;$("#sSource").textContent=q.source||"";$("#sBar").style.width=((sidx+1)/squeue.length*100)+"%";$("#sQuestion").textContent=q.question;$("#sOptions").innerHTML="";$("#sQaAnswer").classList.add("hidden");$("#sFeedback").className="feedback hidden";$("#sPrev").disabled=sidx===0;sPalette();
-if(q.type==="qa"){let btn=document.createElement("button");btn.className="secondary";btn.style.width="100%";btn.textContent="查看答案";btn.onclick=()=>{$("#sQaAnswer").textContent=q.qa_answer||"暂无答案";$("#sQaAnswer").classList.toggle("hidden");btn.textContent=$("#sQaAnswer").classList.contains("hidden")?"查看答案":"收起答案"};$("#sOptions").append(btn);return}
-q.options.forEach(o=>{let l=document.createElement("label");l.className="opt";let inp=document.createElement("input");inp.type=q.type==="multiple"?"checkbox":"radio";inp.name="sans";inp.value=o.key;let k=document.createElement("span");k.className="key";k.textContent=o.key+".";let t=document.createElement("span");t.textContent=o.text;l.append(inp,k,t);$("#sOptions").append(l);inp.onchange=()=>sGrade(q)})}
-function sSelected(){return[...document.querySelectorAll('#sOptions input:checked')].map(x=>x.value)}function sGrade(q){if(slocked)return;let sel=sSelected(),cor=q.answer;if(q.type==="multiple"&&sel.every(k=>cor.includes(k))&&!eq(sel,cor))return;slocked=true;let ok=eq(sel,cor);ss.done[q.id]=ok;if(!ok&&!ss.wrong.includes(q.id))ss.wrong.push(q.id);if(ok)ss.wrong=ss.wrong.filter(id=>id!==q.id);saveS();[...document.querySelectorAll("#sOptions .opt")].forEach((l,i)=>{let o=q.options[i],inp=l.querySelector("input");if(q.answer.includes(o.key))l.classList.add("correct");if(inp.checked&&!q.answer.includes(o.key))l.classList.add("wrong");inp.disabled=true});let f=$("#sFeedback");f.className="feedback "+(ok?"ok":"bad");f.textContent=ok?"答对了。":"答错了。正确答案："+q.options.filter(o=>q.answer.includes(o.key)).map(o=>o.text).join("、");sPalette();if(ok)setTimeout(sNext,220)}
+
+function maskable(ch){return /[A-Za-z0-9\u3400-\u9fff]/.test(ch)}
+const MEM_LEVELS=new Set([0,20,50,80,100]);
+const MEM_STOPWORDS=new Set([
+  "的","了","和","与","及","或","由","在","对","将","把","为","是","时","后","前","上","下","中","内","外","并","且","则","可","能","等","其","本","该","一个","一种","一般","有关","相应","以及","进行"
+]);
+const MEM_KEYWORDS=[
+  "必须","不得","不准","严禁","禁止","应当","应","不应","不小于","不大于","不超过","超过","大于","小于","至少","以上","以下","以内","以外","分别","同时","立即","及时","正确","错误",
+  "线路","钢轨","道岔","轨距","水平","高低","轨向","三角坑","曲线","超高","轨枕","扣件","道床","路基","路肩","辙叉","尖轨","护轨","接头","轨缝","天窗","施工","维修","作业","封锁","限速","防护","列车","信号","安全","检查","测量","整修","打磨","锚固","拨道","捣固","更换","设置","确认","登记","通知","处理","管理","标准","容许偏差","速度","距离","宽度","高度","长度","温度","轨温","时间","次数","范围","位置","条件","要求","原则","方法","步骤"
+];
+function memoDefault(q){
+  let v=Number(memoState[q.id]);
+  if(!MEM_LEVELS.has(v))v=0;
+  return v;
+}
+function splitMemoClauses(text){
+  const out=[];let buf="";
+  for(const ch of [...String(text||"")]){
+    if(/[，。；！？：、\n]/.test(ch)){
+      out.push({body:buf,punc:ch});buf="";
+    }else buf+=ch;
+  }
+  if(buf||!out.length)out.push({body:buf,punc:""});
+  return out;
+}
+function wordTokens(body){
+  const text=String(body||"");
+  const arr=[];
+  try{
+    if(typeof Intl!=="undefined"&&Intl.Segmenter){
+      const seg=new Intl.Segmenter("zh-CN",{granularity:"word"});
+      for(const x of seg.segment(text)){
+        const t=x.segment;if(!/[A-Za-z0-9\u3400-\u9fff]/.test(t))continue;
+        arr.push({start:x.index,end:x.index+[...t].length,text:t});
+      }
+    }
+  }catch(e){}
+  if(arr.length)return arr;
+  const chars=[...text];
+  let i=0;
+  while(i<chars.length){
+    if(!maskable(chars[i])){i++;continue}
+    let j=i+1;while(j<chars.length&&maskable(chars[j]))j++;
+    let run=chars.slice(i,j).join("");
+    if(/^[A-Za-z0-9.%-]+$/.test(run))arr.push({start:i,end:j,text:run});
+    else{
+      let k=i;while(k<j){let e=Math.min(j,k+2);arr.push({start:k,end:e,text:chars.slice(k,e).join("")});k=e}
+    }
+    i=j;
+  }
+  return arr;
+}
+function tokenScore(tok,body){
+  const t=tok.text.trim();
+  if(!t)return-999;
+  if(MEM_STOPWORDS.has(t))return-100;
+  let score=0;
+  if(/\d/.test(t))score+=120;
+  if(/(?:km\/h|km|mm|cm|m|℃|%|分钟|小时|分|秒|次|人|处|组|根|个|米|毫米|厘米|度)/i.test(t))score+=80;
+  for(const k of MEM_KEYWORDS){if(t===k||t.includes(k)){score+=70+Math.min(20,k.length*4);break}}
+  if(/^(必须|不得|不准|严禁|禁止|应当|不应|应|至少|以上|以下|以内|以外)$/.test(t))score+=100;
+  score+=Math.min(30,[...t].length*8);
+  const left=body.slice(Math.max(0,tok.start-3),tok.start);
+  const right=body.slice(tok.end,Math.min([...body].length,tok.end+3));
+  if(/[为是达至超低高大于小于不]/.test(left+right))score+=12;
+  return score;
+}
+function mergeSpans(spans){
+  if(!spans.length)return[];
+  spans.sort((a,b)=>a[0]-b[0]);
+  const out=[spans[0].slice()];
+  for(let i=1;i<spans.length;i++){
+    const cur=spans[i],last=out[out.length-1];
+    if(cur[0]<=last[1])last[1]=Math.max(last[1],cur[1]);
+    else out.push(cur.slice());
+  }
+  return out;
+}
+function maskClause(body,pct){
+  const chars=[...String(body||"")];
+  if(!chars.length)return"";
+  if(pct>=100){
+    return chars.some(maskable)?"【____】":body;
+  }
+  const total=chars.filter(maskable).length;
+  if(total===0||pct<=0)return body;
+  const target=Math.max(1,Math.round(total*pct/100));
+  let toks=wordTokens(body).map(t=>({...t,score:tokenScore(t,body)})).filter(t=>t.score>-50);
+  if(!toks.length)return body;
+  toks.sort((a,b)=>b.score-a.score||([...(b.text||"")].length-[...(a.text||"")].length)||a.start-b.start);
+  const chosen=[];let hidden=0;
+  for(const t of toks){
+    if(hidden>=target)break;
+    chosen.push([t.start,t.end]);
+    hidden+=Math.max(1,t.end-t.start);
+  }
+  const spans=mergeSpans(chosen);
+  let out="",i=0;
+  for(const [a,b] of spans){
+    out+=chars.slice(i,a).join("")+"【____】";i=b;
+  }
+  out+=chars.slice(i).join("");
+  return out;
+}
+function clozeText(text,pct){
+  return splitMemoClauses(text).map(({body,punc})=>maskClause(body,pct)+punc).join("");
+}
+
+function compactMnemonicText(text){
+  let t=String(text||"").replace(/\s+/g,"").replace(/（选择正确答案）/g,"");
+  const reps=[
+    [/允许速度/g,"V"],[/线路允许速度/g,"V"],[/不得超过/g,"≤"],[/不应大于/g,"≤"],[/不得大于/g,"≤"],[/不超过/g,"≤"],
+    [/不得小于/g,"≥"],[/不应小于/g,"≥"],[/不小于/g,"≥"],[/大于/g,">"],[/小于/g,"<"],
+    [/正线上/g,"正线"],[/到发线上/g,"到发"],[/其他站线上/g,"其他站"],[/其他正线上/g,"其他正线"],
+    [/一般情况下/g,"一般"],[/困难情况下/g,"困难"],[/应及时/g,"及时"],[/应立即/g,"立即"],[/必须立即/g,"立即"],
+    [/应进行/g,"要"],[/进行/g,""],[/的规定/g,""],[/的要求/g,""],[/技术标准/g,"标准"],
+    [/钢轨长度/g,"轨长"],[/钢轨温度/g,"轨温"],[/线路中心/g,"线中"],[/基本轨/g,"基轨"],[/可动心轨/g,"动心轨"],
+    [/辙叉心/g,"叉心"],[/轮缘槽/g,"缘槽"],[/垂直磨耗/g,"垂磨"],[/侧面磨耗/g,"侧磨"],[/容许偏差/g,"偏差"],
+    [/锁定轨温/g,"锁温"],[/轨道几何尺寸/g,"几何尺寸"],[/无缝线路/g,"无缝"],[/道床/g,"床"],
+    [/更换/g,"换"],[/整修/g,"修"],[/修理/g,"修"],[/处理/g,"处"],[/检查/g,"查"],[/测量/g,"量"],
+    [/不符合/g,"不合"],[/符合/g,"合"],[/保持/g,"保"],[/设置/g,"设"],[/加强/g,"强"],[/调整/g,"调"]
+  ];
+  reps.forEach(([a,b])=>t=t.replace(a,b));
+  return t.replace(/[。；：:]$/g,"");
+}
+function mnemonicChunks(answer){
+  const a=String(answer||"").replace(/\r/g,"");
+  let parts=[];
+  // 优先按编号拆，编号题的记忆顺序最重要
+  const marked=a.split(/(?=(?:（?\d+[）\.、]|[①②③④⑤⑥⑦⑧⑨⑩]))/).map(x=>x.trim()).filter(Boolean);
+  if(marked.length>=2) parts=marked;
+  else parts=a.split(/[。；;\n]+/).map(x=>x.trim()).filter(Boolean);
+  if(parts.length===1){
+    parts=a.split(/[，,]+/).map(x=>x.trim()).filter(Boolean);
+  }
+  return parts;
+}
+function mnemonicPiece(part){
+  let t=compactMnemonicText(part).replace(/^（?\d+[）\.、]?/,"").replace(/^[①②③④⑤⑥⑦⑧⑨⑩]/,"");
+  if(!t)return"";
+  if([...t].length<=18)return t;
+
+  const toks=wordTokens(t).map(x=>({...x,score:tokenScore(x,t)}));
+  const must=toks.filter(x=>/\d|[><≤≥±%=～~]/.test(x.text)||x.score>=70);
+  const pool=[...must,...toks.filter(x=>x.score>5)].filter((x,i,a)=>a.findIndex(y=>y.start===x.start&&y.end===x.end)===i);
+  pool.sort((a,b)=>b.score-a.score||a.start-b.start);
+  const chosen=pool.slice(0,5).sort((a,b)=>a.start-b.start);
+  let words=chosen.map(x=>x.text.replace(/\s+/g,"")).filter(Boolean);
+  // 太少时，从句首补一个短提示，避免口诀只剩数字
+  if(words.length<2){
+    const lead=[...t.replace(/[，,。；;：:（）()]/g,"")].slice(0,8).join("");
+    if(lead)words.unshift(lead);
+  }
+  let res=words.join("·");
+  if([...res].length>34)res=[...res].slice(0,34).join("")+"…";
+  return res;
+}
+const GOOD_MNEMONICS={"281":"顺二十五，横三厚下：顺垫最多2块、总厚15；横垫最多3块，厚板放下层。","282":"冻叉高强栓，扭矩一一到一四：1100～1400N·m。","283":"总磨＝垂磨＋半个侧磨。","284":"六十轨，侧伤十九：60kg/m钢轨侧磨19mm重伤。","285":"五十轨，侧伤十七：50kg/m钢轨侧磨17mm重伤。","286":"无缝三区：固—伸—缓（固定区、伸缩区、缓冲区）。","287":"基本轨三伤：弯、磨、伤；50轨“六八十”，60轨“六八十十一”。","288":"尖基最好一起换；单换尖轨“先校、后磨、再达标”。","289":"叉心40看垂磨：50轨六八十，60轨六八十十一；动心翼轨记个六。","290":"尖轨要方正，错十；限位要居中，偏一。","291":"侧渡都要锁：一般75，困难50；50米内有邻岔，邻岔也加强。","292":"护轨槽记“42、+3-1、65”：平直42，误差+3/-1；缓冲末端至少65，加宽就等量。","293":"断≤50先急救：夹板＋急救器，前后50拧；首限15，断<30可25；能焊就焊，不能就钻孔夹紧。","294":"断>50走临时：封、切、插6米、钻夹、10.9栓、前后50紧；可正常放，但不超160。","295":"查照“客九一、货八八”：客车1391，货车1388。","296":"夹板四换：折、孔中裂、裂到孔、绝缘坏；其他站线平异5、双鱼15。","297":"护背只记“1348封顶”。","298":"护轨侧磨“快10、慢12”：>120记10，≤120记12。","299":"缓冲接头“三个数”：10.9级栓、700～1100扭矩、绝缘缝≥6。","300":"胶绝四查：胶破、碰短、肥边、漏电。","301":"钻孔三条：中心线还要倒棱；孔净距≥2倍孔径；外部门先同意、工务现场盯。","302":"折断四条：全断、头贯、底贯、掉块；慢线掉块50×10，快线30×5。","303":"截轨三句话：垂直锯、禁剁冲、禁乙炔烧。","304":"轨缝看两样：轨长＋轨温。","305":"重伤折断及时换，换下钢轨做标记，坚决别再用。","306":"道口护轨喇叭口：300处向中弯，终端离工作边150～180。","307":"轮缘槽“直七一、曲九一、深四六”：直70～100，曲内90～100，深45～60。","308":"曲线加宽“295零、245五、195十、再小十五”。","309":"最大超高：有砟单125、双150；无砟一律150。","310":"欠超高：平常75、困难90；快线特殊90～110可暂留。","311":"过超高：平常30、困难50；>160特殊最多70。","312":"直线顺坡：160以下可延；120～160记“十分之一V、8毫米”；≤120记“九分之一V，有缓15、无缓25”。","313":"450到800，正矢就记“三六九”。","314":"尖轨动程先记“直142、曲152”；12弹弯160/180、提速160；18快160、慢160/180。","315":"铝焊离枕：160以内40，160以上100。","316":"焊接两温：开工≥0，放车<300；风雨雪来要防护。","317":"收工顺坡“慢二、中一、快零点八”。","318":"转辙先治弯尖；辙叉抓“查、护、翼、槽”，肥边磨、间隔铁垫。","319":"捣固车记“起50、拨80”；起超50要分次，曲线上下尽量齐，做完动力稳定。","320":"冻害回落“四字诀”：撤、调、顺、稳；木枕冬垫全撤，混枕总厚>10也撤。","321":"绳正法五步：先正直，十米点，三次均，算拨量，按桩拨。","322":"80～120混枕正线：轨距+6/-2，其余全是4。","323":"80～120道岔正线：轨距+3/-2；平高直三都4，支距2。","324":"故障危行四步：先停防、再通知、快抢修；修不了就封锁或限速。","325":"橡胶垫看“7对15、10对20”；复合垫一分家，也得换。","326":"人身安全“三不一五”：不跳钻扒传；休息不上轨枕坡；绕车至少5米，还要看动态。","327":"雷雨“放金属、躲安全，树杆洞都别钻”；暑寒记“中、溺、冻、煤”四防。","328":"胀轨四兆“轨高坏、起拨轻、枕端离”；一见苗头就停工防胀。","329":"跑道五步：先拦车、快恢复、首列15、专人看、慢慢提。","330":"胶绝分两种：拉开＝两端50复紧、≤160、做永久；失效＝先临时、温度合适再永久。","331":"菱岔口诀“锐角多看轨，钝角重查护”：前后都查轨距水平，叉心重点查轨距/查照/护背。","332":"曲线拨道三限：线中一次30、年120不侵限；桥年60，钢50圬70；无缝严禁超温。","333":"无缝起拨四句：砟要足、先拨正；机具避焊缝；起要顺坡拨要顺；扒床及时回填夯实。","334":"轨枕验收“方匀40、无失伤、宽枕30”。","335":"复式交分“六省一提”：省地、省钱、省咽喉、省站长、省运营、省维修；提效率。","336":"两条假定：两端方向不变、头尾拨零；一点拨动，邻点位置不跟着跑。","337":"跨区间道床一串数：一级砟，III肩400、II和岔450；坡1:1.75；肩高150；枕盒低20～30。","338":"道床验收三字：清、深、密。清到25以下颗粒≤5%；深度达标；密实断面齐边坡。","339":"方向不良七因“修位磨弯捣砟联”：维修、位置、磨耗作业、弯折点、捣固、道砟、联结。","340":"大修八类顺口念：线、轨、岔、枕，口、栏、其他、中修。","341":"支嘴四招：间接拨、禁硬顶、强联结、宽床夯砟加防爬。","342":"辙叉磨压三因：轮冲、吊板、床松。","343":"胀轨跑道一句话：高温先积压力，外界一干扰，轨道横向突然大弯。","344":"扣件三看：挡板“2缝6%”；弹条“1缝/120～150扭，III压11～13.2，坏≤8%”；胶垫“歪>5也≤8”，最后螺栓涂油。","345":"偏磨三治“二十垫、六高二坡、连接不相错”：1/20垫板、6mm超高、≤2‰顺坡。","346":"绳正法五步：先正直，十米点，三次均，算拨量，按桩拨。","347":"胀轨五因：温高、床软、锁低、作乱、线不顺。","348":"不圆顺四治：支距正、轨距递减对、目测消鹅头、个别拨改。","349":"头尾不对正矢就乱：先找中央定头尾，再重测正矢算拨量。","350":"辙叉轨距失格就记“查护＋槽槽”：查照护背不合，护轨槽和辙叉槽不合。","351":"新轨验收四看：错牙1、接头错20、25米轨千米缝80、螺栓涂油扭矩达标。","352":"尖轨磨伤四因：不密贴、顶铁短、基轨磨、轮缘轧挤辗。","353":"曲线四原理：总正矢相等；拨一点邻点反半；正矢和不变；正矢差和为零、头尾拨零。","354":"扳不灵五因“爬杆栓、弯板孔”：尖轨爬、拉杆错、栓夹磨、基轨弯/滑床板不平、孔杆磨。","355":"尖轨跳四因：缝磨松冲、垫板压、捣固空、尖轨拱。","356":"导曲线不圆五因：开口不准、支点不对、支距不标、作维不细、列车冲。","357":"辙叉偏磨三治：焊、倒、捣，捣时别忘水平。","358":"路排验收三条：肩平无草向外坡；侧沟通；符合设计。","359":"轨距扩大五治：外设撑、消离缝、接头垫桥板、换朽枕、混枕消两缝。","360":"辙叉磨压五治：捣底、换枕再捣、垫胶、竖栓扣、铁座弹条。","361":"偏磨一条链：没超高→离心力→反超高→上股偏磨。","362":"轨距扩大一条链：离心＋横推＋轮冲→道钉浮、配件松、钢轨移。","363":"经常保养十一项，压成一句：几床枕缝，钢扣无伤；沙雪冻、口排草，季节单项。","364":"临时补修七项：几何、伤轨、夹栓、轨缝、排水冲刷、道口、其他。","365":"30米两股轨：差150；内股29.925，外股30.075——记“内短925，外长075”。","366":"温升12度：压力232350N，伸长212.4mm——记“23万2350压，212点4长”。","367":"警冲距离就记“二一三五”＝2135mm。","368":"第5点拨后正矢：八九＝89mm。","369":"预留轨缝：六六大顺＝6.6mm。"};
+function makeMnemonic(q){
+  if(GOOD_MNEMONICS[q.id]) return GOOD_MNEMONICS[q.id];
+  const answer=q.qa_answer||"";
+  const parts=mnemonicChunks(answer);
+  let cues=parts.map(mnemonicPiece).filter(Boolean);
+  // 太多条时仍保留完整顺序，但每条再压短；论述题也不会变成一大段答案复制
+  if(cues.length>12)cues=cues.slice(0,12);
+  const nums=["一","二","三","四","五","六","七","八","九","十","十一","十二"];
+  if(cues.length>=2){
+    return cues.map((x,i)=>`${nums[i]||i+1}${x}`).join("；")+"。";
+  }
+  let one=cues[0]||compactMnemonicText(answer);
+  // 短答案做成真正的一口口诀
+  return one.replace(/[，,]+/g,"，").replace(/[。；;]+$/g,"")+"。";
+}
+
+function renderMemo(q){
+  const box=$("#sOptions");
+  const answer=q.qa_answer||"暂无答案";
+  let level=memoDefault(q);
+
+  const panel=document.createElement("div");panel.className="memo-panel";
+  const head=document.createElement("div");head.className="memo-head";
+  head.innerHTML='<b>📖 关键词渐进挖空</b><span>按标点分句；长句多挖、短句少挖，优先挖数字、专业术语、限定词和动作结论</span>';
+  const view=document.createElement("div");view.className="memo-answer";
+  const rhyme=document.createElement("div");rhyme.className="memo-rhyme";
+  const rhymeTitle=document.createElement("div");rhymeTitle.className="memo-rhyme-title";rhymeTitle.textContent="🧠 好背口诀 / 谐音记忆";
+  const rhymeText=document.createElement("div");rhymeText.className="memo-rhyme-text";rhymeText.textContent=makeMnemonic(q);
+  const rhymeNote=document.createElement("div");rhymeNote.className="memo-rhyme-note";rhymeNote.textContent="这行只负责帮你记住骨架、数字和顺序；考试时再把口诀展开成标准答案。";
+  rhyme.append(rhymeTitle,rhymeText,rhymeNote);
+  const controls=document.createElement("div");controls.className="memo-controls";
+  const presets=document.createElement("div");presets.className="memo-presets";
+  const tip=document.createElement("div");tip.className="memo-tip";
+  tip.textContent="建议按 完整答案 → 20% → 50% → 80% → 全挖 逐级背。同一标点前的每个小句都会单独计算挖空量，不会把名额浪费在“的、了、和、是、在”这类词上。";
+
+  const presetDefs=[["完整答案",0],["挖 20%",20],["挖 50%",50],["挖 80%",80],["全挖",100]];
+  const pButtons=[];
+  presetDefs.forEach(([label,val])=>{
+    const b=document.createElement("button");b.type="button";b.textContent=label;
+    b.onclick=()=>setLevel(val);presets.append(b);pButtons.push([b,val]);
+  });
+  function setLevel(v){
+    level=MEM_LEVELS.has(Number(v))?Number(v):0;
+    memoState[q.id]=level;saveMemo();update();
+  }
+  function update(){
+    if(level===0)view.textContent=answer;
+    else if(level===100)view.textContent=clozeText(answer,100);
+    else view.textContent=clozeText(answer,level);
+    rhyme.style.display=level===0?"block":"none";
+    pButtons.forEach(([b,val])=>b.classList.toggle("active",level===val));
+  }
+  controls.append(presets,tip);
+  panel.append(head,view,rhyme,controls);box.append(panel);update();
+}
+function sRender(){
+  if(!squeue.length)return;
+  let q=squeue[sidx];slocked=false;ss.progress[smode]=sidx;saveS();
+  $("#sPos").textContent=`第 ${sidx+1} / ${squeue.length} 题`;
+  $("#sSource").textContent=q.source||"";
+  $("#sBar").style.width=((sidx+1)/squeue.length*100)+"%";
+  $("#sQuestion").textContent=q.question;
+  $("#sOptions").innerHTML="";
+  $("#sQaAnswer").classList.add("hidden");
+  $("#sFeedback").className="feedback hidden";$("#sMemory").classList.add("hidden");
+  $("#sPrev").disabled=sidx===0;
+  sPalette();
+
+  if(q.type==="qa"){
+    if(BIG_SOURCES.has(q.source)){
+      renderMemo(q);
+    }else{
+      let btn=document.createElement("button");btn.className="secondary";btn.style.width="100%";btn.type="button";btn.textContent="查看答案";
+      btn.onclick=()=>{$("#sQaAnswer").textContent=q.qa_answer||"暂无答案";$("#sQaAnswer").classList.toggle("hidden");btn.textContent=$("#sQaAnswer").classList.contains("hidden")?"查看答案":"收起答案"};
+      $("#sOptions").append(btn);
+    }
+    return;
+  }
+  q.options.forEach(o=>{
+    let l=document.createElement("label");l.className="opt";
+    let inp=document.createElement("input");inp.type=q.type==="multiple"?"checkbox":"radio";inp.name="sans";inp.value=o.key;
+    let k=document.createElement("span");k.className="key";k.textContent=o.key+".";
+    let tx=document.createElement("span");tx.textContent=o.text;
+    l.append(inp,k,tx);$("#sOptions").append(l);inp.onchange=()=>sGrade(q);
+  });
+}
+function sSelected(){return[...document.querySelectorAll('#sOptions input:checked')].map(x=>x.value)}
+function sGrade(q){
+  if(slocked)return;let sel=sSelected(),cor=q.answer;
+  if(q.type==="multiple"&&sel.every(k=>cor.includes(k))&&!eq(sel,cor))return;
+  slocked=true;let ok=eq(sel,cor);ss.done[q.id]=ok;
+  if(!ok&&!ss.wrong.includes(q.id))ss.wrong.push(q.id);if(ok)ss.wrong=ss.wrong.filter(id=>id!==q.id);saveS();
+  [...document.querySelectorAll("#sOptions .opt")].forEach((l,i)=>{let o=q.options[i],inp=l.querySelector("input");if(q.answer.includes(o.key))l.classList.add("correct");if(inp.checked&&!q.answer.includes(o.key))l.classList.add("wrong");inp.disabled=true});
+  let f=$("#sFeedback");f.className="feedback "+(ok?"ok":"bad");f.textContent=ok?"答对了。":"答错了。正确答案："+q.options.filter(o=>q.answer.includes(o.key)).map(o=>o.text).join("、");
+  const qm=makeQuickMemory(q),mb=$("#sMemory");if(qm){mb.textContent=qm;mb.classList.remove("hidden")}
+  sPalette();if(ok)setTimeout(sNext,220);
+}
 function sNext(){if(sidx<squeue.length-1){sidx++;sRender()}else alert("已经到本模式最后一题了。")}function sPrev(){if(sidx>0){sidx--;sRender()}}
 $("#sNext").onclick=sNext;$("#sPrev").onclick=sPrev;$("#sExit").onclick=()=>show("secondHome");$("#sPaletteBtn").onclick=()=>$("#sPaletteWrap").classList.toggle("hidden");
-function sPalette(){let p=$("#sPalette");p.innerHTML="";squeue.forEach((q,i)=>{let b=document.createElement("button");b.className="qnum";b.textContent=i+1;if(q.type!=="qa"){if(ss.done[q.id]===true)b.classList.add("correct");else if(ss.done[q.id]===false)b.classList.add("wrong")}if(i===sidx)b.classList.add("current");b.onclick=()=>{sidx=i;$("#sPaletteWrap").classList.add("hidden");sRender()};p.append(b)})}
+function sPalette(){
+  let p=$("#sPalette");p.innerHTML="";
+  squeue.forEach((q,i)=>{let b=document.createElement("button");b.className="qnum";b.textContent=i+1;if(q.type!=="qa"){if(ss.done[q.id]===true)b.classList.add("correct");else if(ss.done[q.id]===false)b.classList.add("wrong")}if(i===sidx)b.classList.add("current");b.onclick=()=>{sidx=i;$("#sPaletteWrap").classList.add("hidden");sRender()};p.append(b)})
+}
+
 
 // THIRD SET: 中级理论知识（860选择 + 198判断），独立进度/错题/随机顺序
 const TKEY="rail_quiz_third_middle_v1";
@@ -346,6 +728,7 @@ function tRender(){
   $("#tQuestion").textContent=q.question;
   $("#tOptions").innerHTML="";
   $("#tFeedback").className="feedback hidden";
+  $("#tMemory").classList.add("hidden");
   $("#tPrev").disabled=tidx===0;
   tPalette();
 
@@ -392,6 +775,8 @@ function tGrade(q){
   f.textContent=ok
     ?"答对了。"
     :"答错了。正确答案："+q.options.filter(o=>q.answer.includes(o.key)).map(o=>o.text).join("、");
+  const qm=makeQuickMemory(q),mb=$("#tMemory");
+  if(qm){mb.textContent=qm;mb.classList.remove("hidden")}
   tPalette();
   if(ok)setTimeout(tNext,220);
 }
