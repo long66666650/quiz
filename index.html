@@ -96,6 +96,20 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
 @media(max-width:420px){.memo-presets{grid-template-columns:repeat(2,1fr)}.memo-answer{font-size:16px}.memo-count{min-width:82px}}
 
 
+
+/* 第一套模拟考试：仅新增，不改原有刷题/二三套/激活 */
+.exam-score-main{text-align:center;padding:18px 10px 10px}
+.exam-score-num{font-size:52px;line-height:1;font-weight:950;color:#2f65c8}
+.exam-score-den{font-size:18px;color:#7890a4;font-weight:800;margin-left:4px}
+.exam-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0}
+.exam-breakdown>div{padding:12px 8px;border-radius:14px;background:#f4f8fb;text-align:center}
+.exam-breakdown b{display:block;font-size:20px;color:#365c7b}.exam-breakdown span{display:block;margin-top:3px;font-size:12px;color:#7890a4}
+.exam-note{margin:10px 0;padding:11px 13px;border-radius:14px;background:#fff9e8;border:1px solid #f1dda0;color:#755f27;line-height:1.65;font-size:13px}
+.qnum.answered{background:#dcecff;color:#315f8c}
+.exam-submit{margin-top:14px}
+.exam-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+@media(max-width:430px){.exam-breakdown{grid-template-columns:1fr}.exam-result-actions{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -129,6 +143,7 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
     <div class="row"><div><label class="title">题型</label><select id="typeSel"><option value="mixed">混合出题</option><option value="single">只练单选</option><option value="multiple">只练多选</option><option value="judge">只练判断</option></select></div>
     <div><label class="title">难度</label><select id="diffSel"><option value="easy">简单</option><option value="normal" selected>一般</option><option value="hard">困难</option></select></div></div>
     <button id="startFirst" class="primary start">开始无限刷题</button>
+    <button id="startExam" class="setbtn">📝 模拟考试 · 100分<small>单选50道×1分，多选20道×2分，判断20道×0.5分，共90道题。</small></button>
     <button id="firstHome" class="secondary start">返回题库首页</button>
     <div class="mode-note">第一套只保留单选、多选、判断和混合，不加填空。单选、多选严格使用当前原题的有效选项，不跨题乱拼无关干扰项；多选题会在题目上方明确提示。选择题答完显示笔记原话；判断题答错时显示正确解析和正确表述。</div>
   </div>
@@ -141,6 +156,47 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
   <div id="fQuestion" class="q"></div><div id="fOptions"></div>
   <div id="fFeedback" class="feedback hidden"></div><div id="fKeywords" class="keyword-note hidden"></div>
   <div class="actions first-actions"><button id="fBack" class="secondary">重新选择</button><button id="fPrev" class="secondary">上一题</button><button id="fNext" class="primary">下一题</button></div>
+</section>
+
+<section id="firstExam" class="card hidden">
+  <div class="stats">
+    <div class="stat"><b id="eAnswered">0</b><span>已答</span></div>
+    <div class="stat"><b id="eRemain">90</b><span>未答</span></div>
+    <div class="stat"><b>100</b><span>总分</span></div>
+  </div>
+  <div class="meta"><span id="eSerial">第 1 / 90 题</span><span id="eTag" class="badge">单选题 · 1分</span></div>
+  <div class="progress"><div id="eBar"></div></div>
+  <div id="eTypeNotice" class="first-type-notice single">本题为单选题</div>
+  <div id="eQuestion" class="q"></div>
+  <div id="eOptions"></div>
+  <div id="eFeedback" class="feedback hidden"></div>
+  <div id="eDetail" class="keyword-note hidden"></div>
+  <div class="actions">
+    <button id="ePrev" class="secondary">上一题</button>
+    <button id="ePaletteBtn" class="secondary">答题卡</button>
+    <button id="eNext" class="primary">下一题</button>
+  </div>
+  <div id="ePaletteWrap" class="hidden"><div class="palette" id="ePalette"></div></div>
+  <button id="eSubmit" class="primary start exam-submit">交卷并评分</button>
+  <button id="eExit" class="secondary start">退出模拟考试</button>
+</section>
+
+<section id="firstExamResult" class="hidden">
+  <div class="hero"><h1>📝 第一套模拟考试成绩</h1><p>共90道题，满分100分；多选题必须全部选对才得2分。</p></div>
+  <div class="card">
+    <div class="exam-score-main"><span id="eTotalScore" class="exam-score-num">0</span><span class="exam-score-den">/ 100</span></div>
+    <div class="exam-breakdown">
+      <div><b id="eSingleScore">0 / 50</b><span>单选题 · 50道</span></div>
+      <div><b id="eMultiScore">0 / 40</b><span>多选题 · 20道</span></div>
+      <div><b id="eJudgeScore">0 / 10</b><span>判断题 · 20道</span></div>
+    </div>
+    <div id="eResultNote" class="exam-note"></div>
+    <div class="exam-result-actions">
+      <button id="eReviewExam" class="secondary">查看试卷</button>
+      <button id="eNewExam" class="primary">重新模拟</button>
+    </div>
+    <button id="eBackSetup" class="secondary start">返回第一套</button>
+  </div>
 </section>
 
 <section id="secondHome" class="hidden">
@@ -284,7 +340,7 @@ const SET3=[{"id":1,"type":"single","question":"防护栅栏应设置在用地�
 const $=s=>document.querySelector(s), shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
 // navigation
-function show(id){["home","firstSetup","firstQuiz","secondHome","secondQuiz","thirdHome","thirdQuiz"].forEach(x=>$("#"+x).classList.add("hidden"));$("#"+id).classList.remove("hidden");window.scrollTo(0,0)}
+function show(id){["home","firstSetup","firstQuiz","firstExam","firstExamResult","secondHome","secondQuiz","thirdHome","thirdQuiz"].forEach(x=>$("#"+x).classList.add("hidden"));$("#"+id).classList.remove("hidden");window.scrollTo(0,0)}
 $("#goFirst").onclick=()=>show("firstSetup");$("#goSecond").onclick=()=>show("secondHome");$("#goThird").onclick=()=>show("thirdHome");$("#firstHome").onclick=()=>show("home");$("#secondBackHome").onclick=()=>show("home");$("#thirdBackHome").onclick=()=>show("home");
 
 // FIRST SET infinite engine — 最新重点知识题库 + 准确选项 + 详细判断解析 + 历史上一题
@@ -504,6 +560,203 @@ function makeQuickMemory(q){
 }
 $("#startFirst").onclick=()=>{fc.type=$("#typeSel").value;fc.difficulty=$("#diffSel").value;fdone=fright=fserial=0;flast=[];fhistory=[];fpos=-1;fResetBag();fStats();show("firstQuiz");fNext()};
 $("#fNext").onclick=fNext;$("#fPrev").onclick=fPrev;$("#fBack").onclick=()=>show("firstSetup");
+
+// FIRST SET mock exam — 50单选×1 + 20多选×2 + 20判断×0.5 = 100分
+let ePaper=[],epos=0,eSubmitted=false;
+
+function eChoice(base){
+  let opts=shuffle((base.options||[]).map(o=>({text:o.text,correct:(base.answer||[]).includes(o.key)})));
+  return{
+    kind:base.type,
+    question:base.question,
+    options:opts.map((o,i)=>({...o,key:"ABCDEFG"[i]})),
+    sourceId:base.id,
+    sourceText:base.sourceText||"",
+    explanation:base.explanation||""
+  };
+}
+function eJudge(base){
+  const correct=(base.options||[]).filter(o=>(base.answer||[]).includes(o.key));
+  const wrong=(base.options||[]).filter(o=>!(base.answer||[]).includes(o.key));
+  if(!correct.length)return null;
+  let truth=Math.random()<.5,chosen=[],changes=[];
+  if(base.type==="single"){
+    const right=correct[0].text;
+    if(truth||!wrong.length){chosen=[right];truth=true}
+    else{
+      const bad=wrong[Math.floor(Math.random()*wrong.length)].text;
+      chosen=[bad];changes=[{old:right,new:bad}]
+    }
+  }else{
+    const rightList=correct.map(o=>o.text);chosen=[...rightList];
+    if(!truth&&wrong.length&&chosen.length){
+      const ri=Math.floor(Math.random()*chosen.length),old=chosen[ri];
+      const bad=wrong[Math.floor(Math.random()*wrong.length)].text;
+      chosen[ri]=bad;changes=[{old,new:bad}]
+    }else truth=true;
+  }
+  const used=chosen.join("、"),statement=fReplaceBlank(base.question,used);
+  if(!statement)return null;
+  const correctText=correct.map(o=>o.text).join("、");
+  return{
+    kind:"judge",
+    question:"判断下列完整表述是否正确：",
+    statement,
+    options:[{key:"A",text:"正确",correct:truth},{key:"B",text:"错误",correct:!truth}],
+    sourceId:base.id,
+    sourceText:base.sourceText||"",
+    explanation:base.explanation||"",
+    judgeTruth:truth,
+    judgeUsed:used,
+    judgeCorrect:correctText,
+    judgeChanges:changes,
+    judgeCorrectStatement:fReplaceBlank(base.question,correctText)
+  };
+}
+function eBuildPaper(){
+  const singles=shuffle(ORIGINAL.filter(q=>q.type==="single")).slice(0,50);
+  const multis=shuffle(ORIGINAL.filter(q=>q.type==="multiple")).slice(0,20);
+  const used=new Set([...singles,...multis].map(q=>q.id));
+  const judgeBases=shuffle(ORIGINAL.filter(q=>!used.has(q.id)));
+  const judges=[];
+  for(const b of judgeBases){
+    const j=eJudge(b);
+    if(j){judges.push(j);if(judges.length===20)break}
+  }
+  if(judges.length<20){
+    for(const b of shuffle(ORIGINAL)){
+      if(judges.length===20)break;
+      const j=eJudge(b);if(j)judges.push(j)
+    }
+  }
+  ePaper=[
+    ...singles.map(b=>({cur:eChoice(b),type:"single",points:1,selected:[],ok:null,got:0})),
+    ...multis.map(b=>({cur:eChoice(b),type:"multiple",points:2,selected:[],ok:null,got:0})),
+    ...judges.map(j=>({cur:j,type:"judge",points:.5,selected:[],ok:null,got:0}))
+  ];
+  epos=0;eSubmitted=false;
+}
+function eCorrectKeys(item){return item.cur.options.filter(o=>o.correct).map(o=>o.key)}
+function eAnswerText(item){return item.cur.options.filter(o=>o.correct).map(o=>o.text).join("、")}
+function eFmt(n){return Number.isInteger(n)?String(n):n.toFixed(1)}
+function eAnsweredCount(){return ePaper.filter(x=>(x.selected||[]).length>0).length}
+function eUpdateStats(){
+  const done=eAnsweredCount();
+  $("#eAnswered").textContent=done;$("#eRemain").textContent=90-done;
+}
+function eRenderPalette(){
+  const pal=$("#ePalette");pal.innerHTML="";
+  ePaper.forEach((item,i)=>{
+    const b=document.createElement("button");b.className="qnum";b.textContent=i+1;
+    if(i===epos)b.classList.add("current");
+    if(eSubmitted)b.classList.add(item.ok?"correct":"wrong");
+    else if((item.selected||[]).length)b.classList.add("answered");
+    b.onclick=()=>{epos=i;eRenderExam()};
+    pal.append(b);
+  });
+}
+function eDetailHTML(item){
+  const cur=item.cur,src=ORIGINAL.find(q=>q.id===cur.sourceId);
+  const evidence=(src&&src.sourceText)||cur.sourceText||"";
+  const full=(cur.kind==="judge"&&cur.judgeCorrectStatement)?cur.judgeCorrectStatement:fCompletedSourceText(cur);
+  if(cur.kind==="judge"&&!item.ok){
+    let why="";
+    if(cur.judgeTruth===false){
+      const changes=Array.isArray(cur.judgeChanges)?cur.judgeChanges:[];
+      if(changes.length){
+        why=changes.map(c=>`题目把「${fEsc(c.old)}」替换成了「${fEsc(c.new)}」`).join("；")+"。";
+      }else if(cur.judgeUsed&&cur.judgeCorrect&&cur.judgeUsed!==cur.judgeCorrect){
+        why=`正确内容应为「${fEsc(cur.judgeCorrect)}」，题目写成了「${fEsc(cur.judgeUsed)}」。`;
+      }else why="题目中的关键对象、条件或数值与正确内容不一致。";
+    }else{
+      why="这句话没有发生错误替换，关键对象、条件和数值都与正确内容一致，因此应判断为“正确”。";
+    }
+    return `<b>✅ 详细解析</b><br><b>你错在：</b>${why}${full?`<br><b>正确表述：</b>${fEsc(full)}`:""}${evidence?`<br><b>原文依据：</b>${fEsc(evidence)}`:""}`;
+  }
+  if(evidence)return `<b>📌 原文依据：</b>${fEsc(evidence)}`;
+  return "";
+}
+function eRenderExam(){
+  if(!ePaper.length)return;
+  const item=ePaper[epos],cur=item.cur;
+  $("#eSerial").textContent=`第 ${epos+1} / 90 题`;
+  $("#eBar").style.width=((epos+1)/90*100)+"%";
+  const label=item.type==="single"?"单选题 · 1分":item.type==="multiple"?"多选题 · 2分":"判断题 · 0.5分";
+  $("#eTag").textContent=label;
+  const notice=$("#eTypeNotice");
+  notice.className="first-type-notice "+(item.type==="judge"?"judge":item.type);
+  notice.textContent=item.type==="multiple"?"⚠️ 本题为多选题，可选择多个答案":item.type==="judge"?"本题为判断题":"本题为单选题";
+  $("#eQuestion").textContent=cur.kind==="judge"?(cur.question+"\n"+cur.statement):cur.question;
+
+  const wrap=$("#eOptions");wrap.innerHTML="";
+  cur.options.forEach(o=>{
+    const l=document.createElement("label");l.className="opt";
+    const inp=document.createElement("input");inp.type=item.type==="multiple"?"checkbox":"radio";inp.name="examans";inp.value=o.key;
+    if((item.selected||[]).includes(o.key))inp.checked=true;
+    const k=document.createElement("span");k.className="key";k.textContent=o.key+".";
+    const t=document.createElement("span");t.textContent=o.text;
+    l.append(inp,k,t);wrap.append(l);
+    if(eSubmitted){
+      if(o.correct)l.classList.add("correct");
+      if(inp.checked&&!o.correct)l.classList.add("wrong");
+      inp.disabled=true;
+    }else{
+      inp.onchange=()=>{
+        item.selected=[...document.querySelectorAll('#eOptions input:checked')].map(x=>x.value);
+        eUpdateStats();eRenderPalette();
+      };
+    }
+  });
+
+  $("#ePrev").disabled=epos===0;
+  $("#eNext").disabled=epos===89;
+  $("#eSubmit").classList.toggle("hidden",eSubmitted);
+
+  const fb=$("#eFeedback"),detail=$("#eDetail");
+  fb.className="feedback hidden";detail.classList.add("hidden");detail.innerHTML="";
+  if(eSubmitted){
+    fb.className="feedback "+(item.ok?"ok":"bad");
+    fb.textContent=`正确答案：${eAnswerText(item)}　　本题得分：${eFmt(item.got)} / ${eFmt(item.points)}`;
+    const d=eDetailHTML(item);
+    if(d){detail.innerHTML=d;detail.classList.remove("hidden")}
+  }
+  eUpdateStats();eRenderPalette();
+}
+function eStartExam(){
+  eBuildPaper();show("firstExam");$("#ePaletteWrap").classList.add("hidden");eRenderExam();
+}
+function eSubmitExam(){
+  const unanswered=90-eAnsweredCount();
+  const msg=unanswered?`还有 ${unanswered} 道题未作答，确定现在交卷吗？`:"确定交卷并查看成绩吗？";
+  if(!confirm(msg))return;
+
+  let single=0,multi=0,judge=0;
+  ePaper.forEach(item=>{
+    const ok=eq(item.selected||[],eCorrectKeys(item));
+    item.ok=ok;item.got=ok?item.points:0;
+    if(item.type==="single")single+=item.got;
+    else if(item.type==="multiple")multi+=item.got;
+    else judge+=item.got;
+  });
+  eSubmitted=true;
+  const total=single+multi+judge;
+  $("#eTotalScore").textContent=eFmt(total);
+  $("#eSingleScore").textContent=`${eFmt(single)} / 50`;
+  $("#eMultiScore").textContent=`${eFmt(multi)} / 40`;
+  $("#eJudgeScore").textContent=`${eFmt(judge)} / 10`;
+  const answered=eAnsweredCount();
+  $("#eResultNote").textContent=`本次共作答 ${answered} / 90 道。单选题每题1分；多选题必须全部选对才得2分；判断题每题0.5分。`;
+  show("firstExamResult");
+}
+$("#startExam").onclick=eStartExam;
+$("#ePrev").onclick=()=>{if(epos>0){epos--;eRenderExam()}};
+$("#eNext").onclick=()=>{if(epos<89){epos++;eRenderExam()}};
+$("#ePaletteBtn").onclick=()=>{$("#ePaletteWrap").classList.toggle("hidden");eRenderPalette()};
+$("#eSubmit").onclick=eSubmitExam;
+$("#eExit").onclick=()=>{if(eSubmitted||confirm("确定退出本次模拟考试吗？当前答题将不会保存。"))show("firstSetup")};
+$("#eReviewExam").onclick=()=>{show("firstExam");$("#ePaletteWrap").classList.remove("hidden");eRenderExam()};
+$("#eNewExam").onclick=eStartExam;
+$("#eBackSetup").onclick=()=>show("firstSetup");
 
 // SECOND SET engine + progressive memorization for big questions
 const SKEY="rail_quiz_second_unchanged_v1";
