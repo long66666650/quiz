@@ -143,6 +143,7 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
     <div class="row"><div><label class="title">题型</label><select id="typeSel"><option value="mixed">混合出题</option><option value="single">只练单选</option><option value="multiple">只练多选</option><option value="judge">只练判断</option></select></div>
     <div><label class="title">难度</label><select id="diffSel"><option value="easy">简单</option><option value="normal" selected>一般</option><option value="hard">困难</option></select></div></div>
     <button id="startFirst" class="primary start">开始无限刷题</button>
+    <button id="startBatch100" class="setbtn">🎯 100道不重复刷题<small>沿用上方题型和难度；同一轮100题按知识题去重。多选独立原题不足100时不会重复硬凑。</small></button>
     <button id="startExam" class="setbtn">📝 模拟考试 · 100分<small>单选70道×1分，多选10道×2分，判断20道×0.5分，共100道题。</small></button>
     <button id="firstHome" class="secondary start">返回题库首页</button>
     <div class="mode-note">第一套只保留单选、多选、判断和混合，不加填空。单选、多选严格使用当前原题的有效选项，不跨题乱拼无关干扰项；多选题会在题目上方明确提示。选择题答完显示笔记原话；判断题答错时显示正确解析和正确表述。</div>
@@ -156,6 +157,26 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
   <div id="fQuestion" class="q"></div><div id="fOptions"></div>
   <div id="fFeedback" class="feedback hidden"></div><div id="fKeywords" class="keyword-note hidden"></div>
   <div class="actions first-actions"><button id="fBack" class="secondary">重新选择</button><button id="fPrev" class="secondary">上一题</button><button id="fNext" class="primary">下一题</button></div>
+</section>
+
+<section id="firstBatch100" class="card hidden">
+  <div class="stats">
+    <div class="stat"><b id="bDone">0</b><span>本轮已做</span></div>
+    <div class="stat"><b id="bRight">0</b><span>答对</span></div>
+    <div class="stat"><b id="bAcc">0%</b><span>正确率</span></div>
+  </div>
+  <div class="meta"><span id="bSerial">第 1 / 100 题</span><span id="bTag" class="badge">一般 · 单选题</span></div>
+  <div class="progress"><div id="bBar"></div></div>
+  <div id="bTypeNotice" class="first-type-notice single">本题为单选题</div>
+  <div id="bQuestion" class="q"></div>
+  <div id="bOptions"></div>
+  <div id="bFeedback" class="feedback hidden"></div>
+  <div id="bDetail" class="keyword-note hidden"></div>
+  <div class="actions">
+    <button id="bPrev" class="secondary">上一题</button>
+    <button id="bNext" class="primary">下一题</button>
+  </div>
+  <button id="bBack" class="secondary start">返回第一套</button>
 </section>
 
 <section id="firstExam" class="card hidden">
@@ -340,7 +361,7 @@ const SET3=[{"id":1,"type":"single","question":"防护栅栏应设置在用地�
 const $=s=>document.querySelector(s), shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
 // navigation
-function show(id){["home","firstSetup","firstQuiz","firstExam","firstExamResult","secondHome","secondQuiz","thirdHome","thirdQuiz"].forEach(x=>$("#"+x).classList.add("hidden"));$("#"+id).classList.remove("hidden");window.scrollTo(0,0)}
+function show(id){["home","firstSetup","firstQuiz","firstBatch100","firstExam","firstExamResult","secondHome","secondQuiz","thirdHome","thirdQuiz"].forEach(x=>$("#"+x).classList.add("hidden"));$("#"+id).classList.remove("hidden");window.scrollTo(0,0)}
 $("#goFirst").onclick=()=>show("firstSetup");$("#goSecond").onclick=()=>show("secondHome");$("#goThird").onclick=()=>show("thirdHome");$("#firstHome").onclick=()=>show("home");$("#secondBackHome").onclick=()=>show("home");$("#thirdBackHome").onclick=()=>show("home");
 
 // FIRST SET infinite engine — 最新重点知识题库 + 准确选项 + 详细判断解析 + 历史上一题
@@ -560,6 +581,189 @@ function makeQuickMemory(q){
 }
 $("#startFirst").onclick=()=>{fc.type=$("#typeSel").value;fc.difficulty=$("#diffSel").value;fdone=fright=fserial=0;flast=[];fhistory=[];fpos=-1;fResetBag();fStats();show("firstQuiz");fNext()};
 $("#fNext").onclick=fNext;$("#fPrev").onclick=fPrev;$("#fBack").onclick=()=>show("firstSetup");
+
+// FIRST SET 100-question unique practice — 独立模式，不修改无限刷题与模拟考试
+let bPaper=[],bpos=0,bDone=0,bRight=0,bAutoTimer=null,bConfig={type:"mixed",difficulty:"normal"};
+
+function bPool(type){
+  if(type==="single")return ORIGINAL.filter(q=>q.type==="single");
+  if(type==="multiple")return ORIGINAL.filter(q=>q.type==="multiple");
+  return ORIGINAL;
+}
+function bBuildQuestion(base,type){
+  if(type==="judge")return fJudge(base);
+  if(type==="single"||type==="multiple")return fChoice(base);
+  // 混合模式：保持原题题型为主，约25%转为判断题；每题仍对应唯一sourceId
+  return Math.random()<.25 ? fJudge(base) : fChoice(base);
+}
+function bBuildPaper(){
+  bConfig.type=$("#typeSel").value;
+  bConfig.difficulty=$("#diffSel").value;
+
+  const pool=bPool(bConfig.type);
+  if(pool.length<100){
+    alert(`当前第一套只有 ${pool.length} 道独立${bConfig.type==="multiple"?"多选":""}原题，无法在“不重复”的前提下凑满100道。请改选“混合出题”“只练单选”或“只练判断”。`);
+    return false;
+  }
+
+  // fChoice/fJudge沿用第一套原有题目与解析逻辑，只临时使用当前难度
+  fc.difficulty=bConfig.difficulty;
+  const bases=shuffle(pool).slice(0,100);
+
+  bPaper=bases.map(base=>{
+    let cur;
+    if(bConfig.type==="judge") cur=bBuildQuestion(base,"judge");
+    else if(bConfig.type==="single") cur=bBuildQuestion(base,"single");
+    else if(bConfig.type==="multiple") cur=bBuildQuestion(base,"multiple");
+    else cur=bBuildQuestion(base,"mixed");
+    return {cur,sourceId:base.id,answered:false,selected:[],ok:null,feedback:""};
+  });
+
+  // 双保险：同一轮100题的知识题ID必须全部唯一
+  if(new Set(bPaper.map(x=>x.sourceId)).size!==100){
+    alert("生成100题时检测到重复，已停止本轮，请重新开始。");
+    bPaper=[];
+    return false;
+  }
+  bpos=0;bDone=0;bRight=0;
+  return true;
+}
+function bStats(){
+  $("#bDone").textContent=bDone;
+  $("#bRight").textContent=bRight;
+  $("#bAcc").textContent=bDone?Math.round(bRight/bDone*100)+"%":"0%";
+}
+function bSelected(){
+  return [...document.querySelectorAll('#bOptions input:checked')].map(x=>x.value);
+}
+function bCorrectKeys(item){
+  return item.cur.options.filter(o=>o.correct).map(o=>o.key);
+}
+function bCorrectText(item){
+  return item.cur.options.filter(o=>o.correct).map(o=>o.text).join("、");
+}
+function bRenderDetail(item){
+  const box=$("#bDetail");box.classList.add("hidden");box.innerHTML="";
+  if(!item||!item.answered||!item.cur)return;
+  const cur=item.cur;
+  const src=ORIGINAL.find(q=>q.id===cur.sourceId);
+  const evidence=(src&&src.sourceText)||cur.sourceText||"";
+  const full=cur.kind==="judge"&&cur.judgeCorrectStatement
+    ? cur.judgeCorrectStatement
+    : fCompletedSourceText(cur);
+
+  if(cur.kind==="judge"){
+    if(item.ok)return;
+    let why="";
+    if(cur.judgeTruth===false){
+      const changes=Array.isArray(cur.judgeChanges)?cur.judgeChanges:[];
+      if(changes.length){
+        why=changes.map(c=>`题目把「${fEsc(c.old)}」替换成了「${fEsc(c.new)}」`).join("；")+"。";
+      }else if(cur.judgeUsed&&cur.judgeCorrect&&cur.judgeUsed!==cur.judgeCorrect){
+        why=`正确内容应为「${fEsc(cur.judgeCorrect)}」，题目写成了「${fEsc(cur.judgeUsed)}」。`;
+      }else{
+        why="题目中的关键对象、条件或数值与正确内容不一致。";
+      }
+    }else{
+      why="这句话没有发生错误替换，关键对象、条件和数值都与正确内容一致，因此应判断为“正确”。";
+    }
+    box.innerHTML=`<b>✅ 详细解析</b><br><b>你错在：</b>${why}${full?`<br><b>正确表述：</b>${fEsc(full)}`:""}${evidence?`<br><b>原文依据：</b>${fEsc(evidence)}`:""}`;
+    box.classList.remove("hidden");
+    return;
+  }
+  if(evidence||full){
+    box.innerHTML=`<b>📌 原文依据：</b>${fEsc(evidence||full)}`;
+    box.classList.remove("hidden");
+  }
+}
+function bRender(){
+  clearTimeout(bAutoTimer);
+  if(!bPaper.length)return;
+  const item=bPaper[bpos],cur=item.cur;
+  $("#bSerial").textContent=`第 ${bpos+1} / 100 题`;
+  $("#bBar").style.width=((bpos+1)/100*100)+"%";
+
+  const actual={single:"单选题",multiple:"多选题",judge:"判断题"}[cur.kind]||"选择题";
+  $("#bTag").textContent=({easy:"简单",normal:"一般",hard:"困难"}[bConfig.difficulty])+" · "+actual;
+
+  const tn=$("#bTypeNotice");
+  tn.className="first-type-notice "+(cur.kind||"single");
+  tn.textContent=cur.kind==="multiple"?"⚠️ 本题为多选题，可选择多个答案":cur.kind==="judge"?"本题为判断题":"本题为单选题";
+
+  $("#bQuestion").textContent=cur.kind==="judge"?(cur.question+"\n"+cur.statement):cur.question;
+  const wrap=$("#bOptions");wrap.innerHTML="";
+  $("#bFeedback").className="feedback hidden";
+  $("#bDetail").classList.add("hidden");$("#bDetail").innerHTML="";
+
+  cur.options.forEach(o=>{
+    const l=document.createElement("label");l.className="opt";
+    const inp=document.createElement("input");
+    inp.type=cur.kind==="multiple"?"checkbox":"radio";
+    inp.name="bans";inp.value=o.key;
+    if((item.selected||[]).includes(o.key))inp.checked=true;
+    const k=document.createElement("span");k.className="key";k.textContent=o.key+".";
+    const t=document.createElement("span");t.textContent=o.text;
+    l.append(inp,k,t);wrap.append(l);
+
+    inp.onchange=()=>{
+      item.selected=bSelected();
+      bGrade();
+    };
+    if(item.answered){
+      if(o.correct)l.classList.add("correct");
+      if(inp.checked&&!o.correct)l.classList.add("wrong");
+      inp.disabled=true;
+    }
+  });
+
+  $("#bPrev").disabled=bpos===0;
+  $("#bNext").textContent=bpos===99?"完成本轮":"下一题";
+
+  if(item.answered){
+    const fb=$("#bFeedback");
+    fb.className="feedback "+(item.ok?"ok":"bad");
+    fb.textContent=item.feedback;
+    bRenderDetail(item);
+  }
+  bStats();
+}
+function bGrade(){
+  const item=bPaper[bpos];
+  if(!item||item.answered)return;
+  const sel=bSelected(),correct=bCorrectKeys(item);
+  item.selected=[...sel];
+
+  // 沿用第一套多选逻辑：只选到部分正确项时先不判，允许继续勾选
+  if(item.cur.kind==="multiple"&&sel.every(k=>correct.includes(k))&&!eq(sel,correct))return;
+
+  item.answered=true;
+  item.ok=eq(sel,correct);
+  bDone++;if(item.ok)bRight++;
+  item.feedback="正确答案："+bCorrectText(item);
+  bRender();
+
+  if(item.ok&&bpos<99){
+    const pos=bpos;
+    bAutoTimer=setTimeout(()=>{if(bpos===pos){bpos++;bRender()}},520);
+  }
+}
+function bNext(){
+  clearTimeout(bAutoTimer);
+  if(bpos<99){bpos++;bRender();return}
+  alert(`本轮100道不重复刷题已到最后一题。\n已做：${bDone}/100\n答对：${bRight}\n正确率：${bDone?Math.round(bRight/bDone*100):0}%`);
+}
+function bPrev(){
+  clearTimeout(bAutoTimer);
+  if(bpos>0){bpos--;bRender()}
+}
+$("#startBatch100").onclick=()=>{
+  if(!bBuildPaper())return;
+  show("firstBatch100");
+  bStats();bRender();
+};
+$("#bNext").onclick=bNext;
+$("#bPrev").onclick=bPrev;
+$("#bBack").onclick=()=>show("firstSetup");
 
 // FIRST SET mock exam — 70单选×1 + 10多选×2 + 20判断×0.5 = 100分
 let ePaper=[],epos=0,eSubmitted=false;
