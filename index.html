@@ -110,6 +110,27 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
 .exam-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
 @media(max-width:430px){.exam-breakdown{grid-template-columns:1fr}.exam-result-actions{grid-template-columns:1fr}}
 
+
+/* 第二、三套模拟考试：仅新增样式 */
+.exam-textarea{
+  width:100%;min-height:150px;box-sizing:border-box;border:1px solid #d7e1ea;
+  border-radius:14px;padding:12px 13px;font-size:15px;line-height:1.65;
+  resize:vertical;background:#fff;color:#24384a;margin-top:10px;
+}
+.exam-practical-card{
+  margin:12px 0;padding:14px;border:1px solid #d9e3ec;border-radius:15px;background:#fff;
+}
+.exam-practical-card .pq{font-weight:850;line-height:1.65;margin-bottom:8px}
+.exam-user-answer,.exam-ref-answer{
+  margin-top:8px;padding:10px 12px;border-radius:12px;line-height:1.65;white-space:pre-wrap;
+}
+.exam-user-answer{background:#f5f8fb;color:#43586b}
+.exam-ref-answer{background:#eef8ef;color:#31583a}
+.exam-self-buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.exam-self-buttons button{flex:1;min-width:80px}
+.exam-self-buttons button.chosen{outline:3px solid rgba(47,101,200,.18);font-weight:900}
+.exam-pending{color:#9a6a00;font-weight:850}
+
 </style>
 </head>
 <body>
@@ -250,6 +271,7 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
     <button class="setbtn sMode" data-mode="big">📖 大题背诵<small>只练实作、简答、论述、计算题；完整答案下直接看好背口诀，再逐级挖空。</small></button>
     <button class="setbtn sMode" data-mode="random">随机练习<small>随机顺序，进度单独保存。</small></button>
     <button class="setbtn sMode" data-mode="wrong">错题重练<small>只练做错的选择/判断题。</small></button>
+    <button class="setbtn" id="startSecondExam">📝 第二套模拟考试 · 100分<small>选择60道×1分，判断20道×1分，实作5道×4分；共85题。实作题交卷后按参考答案自评。</small></button>
     <button class="secondary start" id="secondBackHome">返回题库首页</button>
   </div>
 </section>
@@ -263,12 +285,54 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
   <div id="sPaletteWrap" class="hidden"><div class="palette" id="sPalette"></div></div>
   <button id="sExit" class="secondary start">退出本套</button>
 </section>
+
+<section id="secondExam" class="card hidden">
+  <div class="stats">
+    <div class="stat"><b id="seAnswered">0</b><span>已答</span></div>
+    <div class="stat"><b id="seRemain">85</b><span>未答</span></div>
+    <div class="stat"><b>100</b><span>总分</span></div>
+  </div>
+  <div class="meta"><span id="seSerial">第 1 / 85 题</span><span id="seTag" class="badge">选择题 · 1分</span></div>
+  <div class="progress"><div id="seBar"></div></div>
+  <div id="seQuestion" class="q"></div>
+  <div id="seOptions"></div>
+  <div id="seFeedback" class="feedback hidden"></div>
+  <div class="actions">
+    <button id="sePrev" class="secondary">上一题</button>
+    <button id="sePaletteBtn" class="secondary">答题卡</button>
+    <button id="seNext" class="primary">下一题</button>
+  </div>
+  <div id="sePaletteWrap" class="hidden"><div class="palette" id="sePalette"></div></div>
+  <button id="seSubmit" class="primary start exam-submit">交卷并评分</button>
+  <button id="seExit" class="secondary start">退出模拟考试</button>
+</section>
+
+<section id="secondExamResult" class="hidden">
+  <div class="hero"><h1>📝 第二套模拟考试成绩</h1><p>客观题自动评分；5道实作题请对照参考答案自评，每题4分。</p></div>
+  <div class="card">
+    <div class="exam-score-main"><span id="seTotalScore" class="exam-score-num">0</span><span class="exam-score-den">/ 100</span></div>
+    <div class="exam-breakdown">
+      <div><b id="seChoiceScore">0 / 60</b><span>选择题 · 60道</span></div>
+      <div><b id="seJudgeScore">0 / 20</b><span>判断题 · 20道</span></div>
+      <div><b id="sePracticalScore">待自评 / 20</b><span>实作题 · 5道</span></div>
+    </div>
+    <div id="seResultNote" class="exam-note">请完成下面5道实作题自评，最终总分会自动更新。</div>
+    <div id="sePracticalReview"></div>
+    <div class="exam-result-actions">
+      <button id="seReviewExam" class="secondary">查看整张试卷</button>
+      <button id="seNewExam" class="primary">重新模拟</button>
+    </div>
+    <button id="seBackHome" class="secondary start">返回第二套</button>
+  </div>
+</section>
+
 <section id="thirdHome" class="hidden">
   <div class="hero"><h1>第三套 · 中级理论知识</h1><p>保持你提供的原题型：860 道选择题 + 198 道判断题，共 1058 题；答题后会显示速记关键词。</p></div>
   <div class="card">
     <button class="setbtn tMode" data-mode="all">顺序练习<small>从上次位置继续。</small></button>
     <button class="setbtn tMode" data-mode="random">随机练习<small>随机顺序，进度单独保存。</small></button>
     <button class="setbtn tMode" data-mode="wrong">错题重练<small>只练做错的题。</small></button>
+    <button class="setbtn" id="startThirdExam">📝 第三套模拟考试 · 100分<small>选择80道×1分，判断20道×1分，共100题。</small></button>
     <button class="secondary start" id="thirdBackHome">返回题库首页</button>
   </div>
 </section>
@@ -282,6 +346,46 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
   <div id="tPaletteWrap" class="hidden"><div class="palette" id="tPalette"></div></div>
   <button id="tExit" class="secondary start">退出本套</button>
 </section>
+
+<section id="thirdExam" class="card hidden">
+  <div class="stats">
+    <div class="stat"><b id="teAnswered">0</b><span>已答</span></div>
+    <div class="stat"><b id="teRemain">100</b><span>未答</span></div>
+    <div class="stat"><b>100</b><span>总分</span></div>
+  </div>
+  <div class="meta"><span id="teSerial">第 1 / 100 题</span><span id="teTag" class="badge">选择题 · 1分</span></div>
+  <div class="progress"><div id="teBar"></div></div>
+  <div id="teQuestion" class="q"></div>
+  <div id="teOptions"></div>
+  <div id="teFeedback" class="feedback hidden"></div>
+  <div class="actions">
+    <button id="tePrev" class="secondary">上一题</button>
+    <button id="tePaletteBtn" class="secondary">答题卡</button>
+    <button id="teNext" class="primary">下一题</button>
+  </div>
+  <div id="tePaletteWrap" class="hidden"><div class="palette" id="tePalette"></div></div>
+  <button id="teSubmit" class="primary start exam-submit">交卷并评分</button>
+  <button id="teExit" class="secondary start">退出模拟考试</button>
+</section>
+
+<section id="thirdExamResult" class="hidden">
+  <div class="hero"><h1>📝 第三套模拟考试成绩</h1><p>选择80道 + 判断20道，共100题，满分100分。</p></div>
+  <div class="card">
+    <div class="exam-score-main"><span id="teTotalScore" class="exam-score-num">0</span><span class="exam-score-den">/ 100</span></div>
+    <div class="exam-breakdown">
+      <div><b id="teChoiceScore">0 / 80</b><span>选择题 · 80道</span></div>
+      <div><b id="teJudgeScore">0 / 20</b><span>判断题 · 20道</span></div>
+      <div><b id="teAnsweredResult">0 / 100</b><span>已作答</span></div>
+    </div>
+    <div id="teResultNote" class="exam-note"></div>
+    <div class="exam-result-actions">
+      <button id="teReviewExam" class="secondary">查看试卷</button>
+      <button id="teNewExam" class="primary">重新模拟</button>
+    </div>
+    <button id="teBackHome" class="secondary start">返回第三套</button>
+  </div>
+</section>
+
 </div>
 
 <script>
@@ -384,7 +488,7 @@ const SET3=[{"id":1,"type":"single","question":"防护栅栏应设置在用地�
 const $=s=>document.querySelector(s), shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
 // navigation
-function show(id){["home","firstSetup","firstQuiz","firstWrong","firstBatch100","firstExam","firstExamResult","secondHome","secondQuiz","thirdHome","thirdQuiz"].forEach(x=>$("#"+x).classList.add("hidden"));$("#"+id).classList.remove("hidden");window.scrollTo(0,0)}
+function show(id){["home","firstSetup","firstQuiz","firstWrong","firstBatch100","firstExam","firstExamResult","secondHome","secondQuiz","secondExam","secondExamResult","thirdHome","thirdQuiz","thirdExam","thirdExamResult"].forEach(x=>$("#"+x).classList.add("hidden"));$("#"+id).classList.remove("hidden");window.scrollTo(0,0)}
 $("#goFirst").onclick=()=>show("firstSetup");$("#goSecond").onclick=()=>show("secondHome");$("#goThird").onclick=()=>show("thirdHome");$("#firstHome").onclick=()=>show("home");$("#secondBackHome").onclick=()=>show("home");$("#thirdBackHome").onclick=()=>show("home");
 
 // FIRST SET infinite engine — 最新重点知识题库 + 准确选项 + 详细判断解析 + 历史上一题
@@ -1044,22 +1148,53 @@ function eJudge(base){
     judgeCorrectStatement:fReplaceBlank(base.question,correctText)
   };
 }
-function eBuildPaper(){
-  const singles=shuffle(ORIGINAL.filter(q=>q.type==="single")).slice(0,70);
-  const multis=shuffle(ORIGINAL.filter(q=>q.type==="multiple")).slice(0,10);
-  const used=new Set([...singles,...multis].map(q=>q.id));
-  const judgeBases=shuffle(ORIGINAL.filter(q=>!used.has(q.id)));
-  const judges=[];
-  for(const b of judgeBases){
-    const j=eJudge(b);
-    if(j){judges.push(j);if(judges.length===20)break}
+function eKnowledgeKey(q){
+  return String(q.sourceText||q.question||q.id)
+    .replace(/[\s，。；、：:“”"'‘’（）()《》【】\-—_/\\]/g,"")
+    .toLowerCase();
+}
+function ePickUnique(list,n,usedKeys,usedIds){
+  const out=[];
+  for(const q of shuffle(list)){
+    if(out.length>=n)break;
+    const k=eKnowledgeKey(q);
+    if(usedIds.has(q.id)||usedKeys.has(k))continue;
+    out.push(q);usedIds.add(q.id);usedKeys.add(k);
   }
+  // 若同知识段去重后不足，才退而求其次：仍保证题目ID不重复
+  if(out.length<n){
+    for(const q of shuffle(list)){
+      if(out.length>=n)break;
+      if(usedIds.has(q.id))continue;
+      out.push(q);usedIds.add(q.id);usedKeys.add(eKnowledgeKey(q));
+    }
+  }
+  return out;
+}
+function eBuildPaper(){
+  const usedKeys=new Set(),usedIds=new Set();
+  const singles=ePickUnique(ORIGINAL.filter(q=>q.type==="single"),70,usedKeys,usedIds);
+  const multis=ePickUnique(ORIGINAL.filter(q=>q.type==="multiple"),10,usedKeys,usedIds);
+
+  const judges=[];
+  for(const b of shuffle(ORIGINAL)){
+    if(judges.length===20)break;
+    if(usedIds.has(b.id))continue;
+    const k=eKnowledgeKey(b);
+    if(usedKeys.has(k))continue;
+    const j=eJudge(b);
+    if(j){judges.push(j);usedIds.add(b.id);usedKeys.add(k)}
+  }
+  // 极端情况下只放宽“同知识段”，但仍绝不重复题目ID
   if(judges.length<20){
     for(const b of shuffle(ORIGINAL)){
       if(judges.length===20)break;
-      const j=eJudge(b);if(j)judges.push(j)
+      if(usedIds.has(b.id))continue;
+      const j=eJudge(b);
+      if(j){judges.push(j);usedIds.add(b.id)}
     }
   }
+
   ePaper=[
     ...singles.map(b=>({cur:eChoice(b),type:"single",points:1,selected:[],ok:null,got:0})),
     ...multis.map(b=>({cur:eChoice(b),type:"multiple",points:2,selected:[],ok:null,got:0})),
@@ -1485,6 +1620,163 @@ function sPalette(){
 }
 
 
+
+// SECOND SET mock exam — 60选择×1 + 20判断×1 + 5实作×4 = 100分
+let sePaper=[],sePos=0,seSubmitted=false,sePracticalMarks={};
+
+function seBuildPaper(){
+  const choices=shuffle(SET2.filter(q=>q.source==="选择题"&&q.type!=="qa")).slice(0,60);
+  const judges=shuffle(SET2.filter(q=>q.source==="判断题"&&q.type!=="qa")).slice(0,20);
+  const practical=shuffle(SET2.filter(q=>q.source==="实作题"&&q.type==="qa")).slice(0,5);
+
+  sePaper=[
+    ...choices.map(q=>({q,type:"choice",points:1,selected:[],ok:null,got:0,text:""})),
+    ...judges.map(q=>({q,type:"judge",points:1,selected:[],ok:null,got:0,text:""})),
+    ...practical.map(q=>({q,type:"practical",points:4,selected:[],ok:null,got:null,text:""}))
+  ];
+  sePos=0;seSubmitted=false;sePracticalMarks={};
+}
+function seAnsweredCount(){
+  return sePaper.filter(x=>x.type==="practical"?String(x.text||"").trim().length>0:(x.selected||[]).length>0).length;
+}
+function seUpdateStats(){
+  const n=seAnsweredCount();
+  $("#seAnswered").textContent=n;
+  $("#seRemain").textContent=85-n;
+}
+function seCorrectText(item){
+  return item.q.options.filter(o=>item.q.answer.includes(o.key)).map(o=>o.text).join("、");
+}
+function seRenderPalette(){
+  const p=$("#sePalette");p.innerHTML="";
+  sePaper.forEach((it,i)=>{
+    const b=document.createElement("button");b.className="qnum";b.textContent=i+1;
+    if(i===sePos)b.classList.add("current");
+    if(seSubmitted&&it.type!=="practical")b.classList.add(it.ok?"correct":"wrong");
+    else if(it.type==="practical"?(String(it.text||"").trim().length>0):(it.selected||[]).length)b.classList.add("answered");
+    b.onclick=()=>{sePos=i;seRender()};
+    p.append(b);
+  });
+}
+function seRender(){
+  if(!sePaper.length)return;
+  const it=sePaper[sePos],q=it.q;
+  $("#seSerial").textContent=`第 ${sePos+1} / 85 题`;
+  $("#seBar").style.width=((sePos+1)/85*100)+"%";
+  $("#seTag").textContent=it.type==="choice"?"选择题 · 1分":it.type==="judge"?"判断题 · 1分":"实作题 · 4分";
+  $("#seQuestion").textContent=q.question;
+  const wrap=$("#seOptions");wrap.innerHTML="";
+  $("#seFeedback").className="feedback hidden";
+  $("#sePrev").disabled=sePos===0;
+  $("#seNext").disabled=sePos===84;
+  $("#seSubmit").classList.toggle("hidden",seSubmitted);
+
+  if(it.type==="practical"){
+    const ta=document.createElement("textarea");
+    ta.className="exam-textarea";ta.placeholder="在这里写你的作答要点（也可以只在脑中作答）";
+    ta.value=it.text||"";ta.disabled=seSubmitted;
+    ta.oninput=()=>{it.text=ta.value;seUpdateStats();seRenderPalette()};
+    wrap.append(ta);
+    if(seSubmitted){
+      const ref=document.createElement("div");ref.className="exam-ref-answer";
+      ref.textContent="参考答案："+(q.qa_answer||"暂无答案");
+      wrap.append(ref);
+      const score=document.createElement("div");score.className="exam-note";
+      score.textContent=`本题自评分：${sePracticalMarks[q.id]??0} / 4`;
+      wrap.append(score);
+    }
+  }else{
+    q.options.forEach(o=>{
+      const l=document.createElement("label");l.className="opt";
+      const inp=document.createElement("input");inp.type="radio";inp.name="seans";inp.value=o.key;
+      if((it.selected||[]).includes(o.key))inp.checked=true;
+      const k=document.createElement("span");k.className="key";k.textContent=o.key+".";
+      const t=document.createElement("span");t.textContent=o.text;
+      l.append(inp,k,t);wrap.append(l);
+      if(seSubmitted){
+        if(q.answer.includes(o.key))l.classList.add("correct");
+        if(inp.checked&&!q.answer.includes(o.key))l.classList.add("wrong");
+        inp.disabled=true;
+      }else{
+        inp.onchange=()=>{
+          it.selected=[...document.querySelectorAll('#seOptions input:checked')].map(x=>x.value);
+          seUpdateStats();seRenderPalette();
+        };
+      }
+    });
+    if(seSubmitted){
+      const fb=$("#seFeedback");
+      fb.className="feedback "+(it.ok?"ok":"bad");
+      fb.textContent=`正确答案：${seCorrectText(it)}　　本题得分：${it.got} / ${it.points}`;
+    }
+  }
+  seUpdateStats();seRenderPalette();
+}
+function seObjectiveScore(){
+  return sePaper.filter(x=>x.type!=="practical").reduce((a,x)=>a+(x.got||0),0);
+}
+function sePracticalScore(){
+  return Object.values(sePracticalMarks).reduce((a,b)=>a+Number(b||0),0);
+}
+function seUpdateResult(){
+  const ch=sePaper.filter(x=>x.type==="choice").reduce((a,x)=>a+(x.got||0),0);
+  const ju=sePaper.filter(x=>x.type==="judge").reduce((a,x)=>a+(x.got||0),0);
+  const ps=sePracticalScore();
+  const marked=Object.keys(sePracticalMarks).length;
+  $("#seChoiceScore").textContent=`${ch} / 60`;
+  $("#seJudgeScore").textContent=`${ju} / 20`;
+  $("#sePracticalScore").textContent=marked===5?`${ps} / 20`:`${ps} / 20（已评${marked}/5）`;
+  $("#seTotalScore").textContent=seObjectiveScore()+ps;
+  $("#seResultNote").textContent=marked===5
+    ?`实作题自评已完成，最终成绩 ${seObjectiveScore()+ps} / 100。`
+    :`客观题得分 ${seObjectiveScore()} / 80。请把下面5道实作题全部自评后再看最终成绩。`;
+}
+function seRenderPracticalReview(){
+  const box=$("#sePracticalReview");box.innerHTML="";
+  sePaper.filter(x=>x.type==="practical").forEach((it,idx)=>{
+    const q=it.q,card=document.createElement("div");card.className="exam-practical-card";
+    card.innerHTML=`<div class="pq">实作题 ${idx+1} · 4分<br>${fEsc(q.question)}</div>
+      <div class="exam-user-answer"><b>你的作答：</b><br>${fEsc(String(it.text||"").trim()||"（未填写）")}</div>
+      <div class="exam-ref-answer"><b>参考答案：</b><br>${fEsc(q.qa_answer||"暂无答案")}</div>
+      <div class="exam-self-buttons"></div>`;
+    const btns=card.querySelector(".exam-self-buttons");
+    [0,2,4].forEach(v=>{
+      const b=document.createElement("button");b.className="secondary";
+      b.textContent=v===0?"不会 · 0分":v===2?"部分会 · 2分":"会 · 4分";
+      if(sePracticalMarks[q.id]===v)b.classList.add("chosen");
+      b.onclick=()=>{sePracticalMarks[q.id]=v;seRenderPracticalReview();seUpdateResult()};
+      btns.append(b);
+    });
+    box.append(card);
+  });
+}
+function seSubmitExam(){
+  const unanswered=85-seAnsweredCount();
+  if(!confirm(unanswered?`还有 ${unanswered} 道题未作答，确定交卷吗？`:"确定交卷并评分吗？"))return;
+
+  sePaper.forEach(it=>{
+    if(it.type==="practical")return;
+    const ok=eq(it.selected||[],it.q.answer||[]);
+    it.ok=ok;it.got=ok?it.points:0;
+    if((it.selected||[]).length){
+      ss.done[it.q.id]=ok;
+      if(ok)ss.wrong=ss.wrong.filter(id=>id!==it.q.id);
+      else if(!ss.wrong.includes(it.q.id))ss.wrong.push(it.q.id);
+    }
+  });
+  saveS();seSubmitted=true;
+  seRenderPracticalReview();seUpdateResult();show("secondExamResult");
+}
+$("#startSecondExam").onclick=()=>{seBuildPaper();show("secondExam");$("#sePaletteWrap").classList.add("hidden");seRender()};
+$("#sePrev").onclick=()=>{if(sePos>0){sePos--;seRender()}};
+$("#seNext").onclick=()=>{if(sePos<84){sePos++;seRender()}};
+$("#sePaletteBtn").onclick=()=>{$("#sePaletteWrap").classList.toggle("hidden");seRenderPalette()};
+$("#seSubmit").onclick=seSubmitExam;
+$("#seExit").onclick=()=>{if(seSubmitted||confirm("确定退出第二套模拟考试吗？当前答题不会保存。"))show("secondHome")};
+$("#seReviewExam").onclick=()=>{show("secondExam");$("#sePaletteWrap").classList.remove("hidden");seRender()};
+$("#seNewExam").onclick=()=>{seBuildPaper();show("secondExam");$("#sePaletteWrap").classList.add("hidden");seRender()};
+$("#seBackHome").onclick=()=>show("secondHome");
+
 // THIRD SET: 中级理论知识（860选择 + 198判断），独立进度/错题/随机顺序
 const TKEY="rail_quiz_third_middle_v1";
 let ts=JSON.parse(localStorage.getItem(TKEY)||'{"done":{},"wrong":[],"progress":{"all":0,"random":0,"wrong":0},"randomOrder":[],"wrongOrder":[]}');
@@ -1604,6 +1896,107 @@ function tPalette(){
     p.append(b);
   });
 }
+
+
+// THIRD SET mock exam — 80选择×1 + 20判断×1 = 100分
+let tePaper=[],tePos=0,teSubmitted=false;
+
+function teBuildPaper(){
+  const choices=shuffle(SET3.filter(q=>q.source==="选择题")).slice(0,80);
+  const judges=shuffle(SET3.filter(q=>q.source==="判断题")).slice(0,20);
+  tePaper=[
+    ...choices.map(q=>({q,type:"choice",points:1,selected:[],ok:null,got:0})),
+    ...judges.map(q=>({q,type:"judge",points:1,selected:[],ok:null,got:0}))
+  ];
+  tePos=0;teSubmitted=false;
+}
+function teAnsweredCount(){return tePaper.filter(x=>(x.selected||[]).length>0).length}
+function teUpdateStats(){
+  const n=teAnsweredCount();$("#teAnswered").textContent=n;$("#teRemain").textContent=100-n;
+}
+function teCorrectText(it){
+  return it.q.options.filter(o=>it.q.answer.includes(o.key)).map(o=>o.text).join("、");
+}
+function teRenderPalette(){
+  const p=$("#tePalette");p.innerHTML="";
+  tePaper.forEach((it,i)=>{
+    const b=document.createElement("button");b.className="qnum";b.textContent=i+1;
+    if(i===tePos)b.classList.add("current");
+    if(teSubmitted)b.classList.add(it.ok?"correct":"wrong");
+    else if((it.selected||[]).length)b.classList.add("answered");
+    b.onclick=()=>{tePos=i;teRender()};
+    p.append(b);
+  });
+}
+function teRender(){
+  if(!tePaper.length)return;
+  const it=tePaper[tePos],q=it.q;
+  $("#teSerial").textContent=`第 ${tePos+1} / 100 题`;
+  $("#teBar").style.width=((tePos+1)/100*100)+"%";
+  $("#teTag").textContent=(it.type==="choice"?"选择题":"判断题")+" · 1分";
+  $("#teQuestion").textContent=q.question;
+  const wrap=$("#teOptions");wrap.innerHTML="";
+  $("#teFeedback").className="feedback hidden";
+  $("#tePrev").disabled=tePos===0;$("#teNext").disabled=tePos===99;
+  $("#teSubmit").classList.toggle("hidden",teSubmitted);
+
+  q.options.forEach(o=>{
+    const l=document.createElement("label");l.className="opt";
+    const inp=document.createElement("input");inp.type="radio";inp.name="teans";inp.value=o.key;
+    if((it.selected||[]).includes(o.key))inp.checked=true;
+    const k=document.createElement("span");k.className="key";k.textContent=o.key+".";
+    const t=document.createElement("span");t.textContent=o.text;
+    l.append(inp,k,t);wrap.append(l);
+    if(teSubmitted){
+      if(q.answer.includes(o.key))l.classList.add("correct");
+      if(inp.checked&&!q.answer.includes(o.key))l.classList.add("wrong");
+      inp.disabled=true;
+    }else{
+      inp.onchange=()=>{
+        it.selected=[...document.querySelectorAll('#teOptions input:checked')].map(x=>x.value);
+        teUpdateStats();teRenderPalette();
+      };
+    }
+  });
+  if(teSubmitted){
+    const fb=$("#teFeedback");
+    fb.className="feedback "+(it.ok?"ok":"bad");
+    fb.textContent=`正确答案：${teCorrectText(it)}　　本题得分：${it.got} / 1`;
+  }
+  teUpdateStats();teRenderPalette();
+}
+function teSubmitExam(){
+  const unanswered=100-teAnsweredCount();
+  if(!confirm(unanswered?`还有 ${unanswered} 道题未作答，确定交卷吗？`:"确定交卷并评分吗？"))return;
+
+  let cs=0,js=0;
+  tePaper.forEach(it=>{
+    const ok=eq(it.selected||[],it.q.answer||[]);
+    it.ok=ok;it.got=ok?1:0;
+    if(it.type==="choice")cs+=it.got;else js+=it.got;
+    if((it.selected||[]).length){
+      ts.done[it.q.id]=ok;
+      if(ok)ts.wrong=ts.wrong.filter(id=>id!==it.q.id);
+      else if(!ts.wrong.includes(it.q.id))ts.wrong.push(it.q.id);
+    }
+  });
+  saveT();teSubmitted=true;
+  $("#teChoiceScore").textContent=`${cs} / 80`;
+  $("#teJudgeScore").textContent=`${js} / 20`;
+  $("#teAnsweredResult").textContent=`${teAnsweredCount()} / 100`;
+  $("#teTotalScore").textContent=cs+js;
+  $("#teResultNote").textContent=`本次得分 ${cs+js} / 100；未作答题按0分计。`;
+  show("thirdExamResult");
+}
+$("#startThirdExam").onclick=()=>{teBuildPaper();show("thirdExam");$("#tePaletteWrap").classList.add("hidden");teRender()};
+$("#tePrev").onclick=()=>{if(tePos>0){tePos--;teRender()}};
+$("#teNext").onclick=()=>{if(tePos<99){tePos++;teRender()}};
+$("#tePaletteBtn").onclick=()=>{$("#tePaletteWrap").classList.toggle("hidden");teRenderPalette()};
+$("#teSubmit").onclick=teSubmitExam;
+$("#teExit").onclick=()=>{if(teSubmitted||confirm("确定退出第三套模拟考试吗？当前答题不会保存。"))show("thirdHome")};
+$("#teReviewExam").onclick=()=>{show("thirdExam");$("#tePaletteWrap").classList.remove("hidden");teRender()};
+$("#teNewExam").onclick=()=>{teBuildPaper();show("thirdExam");$("#tePaletteWrap").classList.add("hidden");teRender()};
+$("#teBackHome").onclick=()=>show("thirdHome");
 
 </script>
 </body></html>
