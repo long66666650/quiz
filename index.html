@@ -198,7 +198,11 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
   <div id="sqDetail" class="keyword-note hidden"></div>
   <div class="actions">
     <button id="sqPrev" class="secondary">上一题</button>
+    <button id="sqPaletteBtn" class="secondary">题号导航</button>
     <button id="sqNext" class="primary">下一题</button>
+  </div>
+  <div id="sqPaletteWrap" class="hidden">
+    <div class="palette" id="sqPalette"></div>
   </div>
   <button id="sqBack" class="secondary start">返回第一套</button>
 </section>
@@ -838,6 +842,30 @@ function sqDetailHTML(item){
   }
   return "";
 }
+function sqRenderPalette(){
+  const p=$("#sqPalette");
+  if(!p)return;
+  p.innerHTML="";
+  sqItems.forEach((item,i)=>{
+    const b=document.createElement("button");
+    b.className="qnum";
+    b.textContent=i+1;
+
+    if(i===sqPos)b.classList.add("current");
+    if(item.answered){
+      b.classList.add(item.ok?"correct":"wrong");
+    }
+
+    b.onclick=()=>{
+      clearTimeout(sqAutoTimer);
+      sqPos=i;
+      sqRender();
+      window.scrollTo(0,0);
+    };
+    p.append(b);
+  });
+}
+
 function sqRender(){
   clearTimeout(sqAutoTimer);
   if(!sqItems.length)return;
@@ -898,6 +926,7 @@ function sqRender(){
     }
   }
   sqStats();
+  sqRenderPalette();
 }
 function sqGrade(){
   const item=sqItems[sqPos];
@@ -941,10 +970,15 @@ $("#startSequential").onclick=()=>{
   sqBuild();
   if(!sqItems.length)return alert("当前题型没有可刷的题。");
   show("firstSequential");
+  $("#sqPaletteWrap").classList.add("hidden");
   sqStats();sqRender();
 };
 $("#sqNext").onclick=sqNext;
 $("#sqPrev").onclick=sqPrev;
+$("#sqPaletteBtn").onclick=()=>{
+  $("#sqPaletteWrap").classList.toggle("hidden");
+  sqRenderPalette();
+};
 $("#sqBack").onclick=()=>show("firstSetup");
 
 // FIRST SET wrong-question collection
