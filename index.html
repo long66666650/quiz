@@ -518,7 +518,31 @@ $("#goFirst").onclick=()=>show("firstSetup");$("#goSecond").onclick=()=>show("se
 
 // FIRST SET infinite engine — 最新重点知识题库 + 准确选项 + 详细判断解析 + 历史上一题
 let fc={type:"mixed",difficulty:"normal"}, fcur=null, flock=false, fdone=0, fright=0, fserial=0, fbag=[], flast=[], fhistory=[], fpos=-1, fAutoTimer=null;
-function fPool(t){if(t==="single")return ORIGINAL.filter(q=>q.type==="single");if(t==="multiple")return ORIGINAL.filter(q=>q.type==="multiple");return ORIGINAL}
+
+// 困难模式只针对第一套：优先真正的重点难点。
+// 评分依据全部来自当前题目本身：数字阈值、条件限制、多选、长条款、分类/组成等。
+function fHardScore(q){
+  const text=String((q&&q.question)||"")+" "+String((q&&q.sourceText)||"");
+  let s=0;
+  if(q&&q.type==="multiple")s+=2;
+  if(/\d/.test(text))s+=3;
+  if(/不大于|不小于|不超过|超过|大于|小于|以上|以下|不足|不得|严禁|必须|至少|范围|条件|规定/.test(text))s+=2;
+  if(String((q&&q.sourceText)||"").length>=80)s+=2;
+  if(/包括|分为|组成|类型|四级|三种|五个|七必|三必|分类|原则|步骤/.test(text))s+=1;
+  return s;
+}
+function fHardFilter(pool,type){
+  if(fc.difficulty!=="hard")return pool;
+  const threshold=type==="single"?3:(type==="multiple"?4:4);
+  const hard=pool.filter(q=>fHardScore(q)>=threshold);
+  return hard.length?hard:pool;
+}
+function fPool(t){
+  let pool=t==="single"?ORIGINAL.filter(q=>q.type==="single")
+          :t==="multiple"?ORIGINAL.filter(q=>q.type==="multiple")
+          :ORIGINAL;
+  return fHardFilter(pool,t);
+}
 function fResetBag(){fbag=shuffle(fPool(fc.type).map(q=>q.id))}
 function fPick(){if(!fbag.length)fResetBag();let id=fbag.pop(),n=0;while(flast.includes(id)&&fbag.length&&n<15){fbag.unshift(id);id=fbag.pop();n++}flast.push(id);if(flast.length>18)flast.shift();return ORIGINAL.find(q=>q.id===id)}
 
@@ -785,6 +809,13 @@ function sqBuild(){
     bases=ORIGINAL.filter(q=>q.type==="multiple");
   }else{
     bases=[...ORIGINAL];
+  }
+
+  // 困难顺序刷题：仍按题号顺序，但只刷重点难点题
+  if(fc.difficulty==="hard"){
+    const threshold=sqType==="single"?3:(sqType==="multiple"?4:4);
+    const hardBases=bases.filter(q=>fHardScore(q)>=threshold);
+    if(hardBases.length)bases=hardBases;
   }
   bases.sort((a,b)=>a.id-b.id);
 
@@ -1173,7 +1204,15 @@ function bBuildPaper(){
 
   // fChoice/fJudge沿用第一套原有题目与解析逻辑，只临时使用当前难度
   fc.difficulty=bConfig.difficulty;
-  const bases=shuffle(pool).slice(0,100);
+
+  // 一般/简单保持原来的随机100题；
+  // 困难则从完整题池中按难点评分优先抽取，仍然保证100题不重复。
+  let bases;
+  if(bConfig.difficulty==="hard"){
+    bases=shuffle(pool).sort((a,b)=>fHardScore(b)-fHardScore(a)).slice(0,100);
+  }else{
+    bases=shuffle(pool).slice(0,100);
+  }
 
   bPaper=bases.map(base=>{
     let cur;
