@@ -1898,6 +1898,31 @@ function eBuildChoiceGroup(list,n,kind,usedKeys,usedIds,usedDisplay,usedSourceCo
   }
   return out;
 }
+function eJudgeVariantSignature(q){
+  const list=(fc&&fc.difficulty==="hard")?(q.hardVariants||[]):(q.normalVariants||[]);
+  if(!Array.isArray(list)||list.length<2)return"";
+  const parts=[...new Set(list.map(v=>fQuestionKey(fPolishQuestionText(v&&v.question))).filter(Boolean))].sort();
+  return parts.length>=2?parts.join("||"):"";
+}
+function eSemanticStem(text){
+  return String(text||"")
+    .toLowerCase()
+    .replace(/[０-９]/g,c=>String("０１２３４５６７８９".indexOf(c)))
+    .replace(/\d+(?:\.\d+)?/g,"#")
+    .replace(/[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹ]/g,"级")
+    .replace(/(?:km\/h|mm|cm|km|m|℃|°c|n·m|n\.m)/gi,"单位")
+    .replace(/[\s，。；、：:“”"'‘’（）()《》【】\-—_/\\]/g,"")
+    .replace(/#+/g,"#");
+}
+function eJudgeSimilarKeys(base,cur){
+  const out=[];
+  const sig=eJudgeVariantSignature(base);if(sig)out.push("v:"+sig);
+  const stem=eSemanticStem(cur&&cur.statement);if(stem)out.push("s:"+stem);
+  const topic=String((base&&base.sourceText)||"")+" "+String((cur&&cur.statement)||"");
+  // 高处作业分级/高度判断属于同一知识点，判断题一张卷只保留一道，避免3m、8m、20m、35m连续换数字。
+  if(/高处作业/.test(topic)&&/(高度|坠落高度基准面|Ⅰ|Ⅱ|Ⅲ|Ⅳ|ⅰ|ⅱ|ⅲ|ⅳ)/.test(topic))out.push("topic:高处作业分级");
+  return out;
+}
 function eBuildPaper(){
   fResetQuestionUsage();
   const usedKeys=new Set(),usedIds=new Set(),usedDisplay=new Set(),usedSourceCounts=new Map();
@@ -1906,44 +1931,35 @@ function eBuildPaper(){
   const multisPool=domain.filter(q=>q.type==="multiple");
   const multiKeys=new Set(multisPool.map(eKnowledgeKey));
 
-  // 100题：优先知识点不重复；实际显示题干始终不重复。
+  // 选择题沿用原来的抽题结构与难度；继续按知识段和实际题干去重。
   const singles=eBuildChoiceGroup(singlesPool,70,"single",usedKeys,usedIds,usedDisplay,usedSourceCounts,multiKeys);
   const multis=eBuildChoiceGroup(multisPool,10,"multiple",usedKeys,usedIds,usedDisplay,usedSourceCounts,multiKeys);
 
   const judges=[];
   const judgeRank=eRankCandidates([...singlesPool,...multisPool]);
-  // 先尝试完全没出现过的知识段。
-  for(const b of judgeRank){
-    if(judges.length===20)break;
-    if(usedIds.has(b.id))continue;
+  const judgeSourceFamilies=new Set();
+  const judgeSimilarKeys=new Set();
+  const canAddJudge=(b,allowUsedId)=>{
     const kk=eKnowledgeKey(b);
-    if(usedKeys.has(kk))continue;
+    // 20道判断题内部，同一来源知识点只出现一次。
+    if(judgeSourceFamilies.has(kk))return false;
+    if(!allowUsedId&&usedIds.has(b.id))return false;
     const cur=eTryMake(b,"judge",usedDisplay);
-    if(!cur)continue;
-    judges.push({base:b,cur});usedIds.add(b.id);usedKeys.add(kk);eMarkSource(usedSourceCounts,b);
-  }
-  // 不够时才从出现次数最少的知识段补，并按2→3→4次逐级放宽。
-  for(const cap of [2,3,4]){
-    if(judges.length>=20)break;
-    const pass=[...judgeRank].sort((a,b)=>eSourceCount(usedSourceCounts,a)-eSourceCount(usedSourceCounts,b));
-    for(const b of pass){
-      if(judges.length===20)break;
-      if(usedIds.has(b.id)||eSourceCount(usedSourceCounts,b)>=cap)continue;
-      const cur=eTryMake(b,"judge",usedDisplay);
-      if(!cur)continue;
-      judges.push({base:b,cur});usedIds.add(b.id);usedKeys.add(eKnowledgeKey(b));eMarkSource(usedSourceCounts,b);
-    }
-  }
-  // 如果仍不满20道，只按出现次数从少到多补；仍不允许实际判断表述重复。
+    if(!cur)return false;
+    // 再做一层“相似题”检查：同一整组变式，或仅换数字/等级的句式，只保留一道。
+    const simKeys=eJudgeSimilarKeys(b,cur);
+    if(simKeys.some(k=>judgeSimilarKeys.has(k)))return false;
+    judges.push({base:b,cur});
+    judgeSourceFamilies.add(kk);simKeys.forEach(k=>judgeSimilarKeys.add(k));
+    usedIds.add(b.id);usedKeys.add(kk);eMarkSource(usedSourceCounts,b);
+    return true;
+  };
+
+  // 第一轮优先没在选择题用过的题号；第二轮允许同题号换成不同判断表述，但仍严格拦截相似句式。
+  for(const b of judgeRank){if(judges.length>=20)break;canAddJudge(b,false)}
   if(judges.length<20){
     const pass=[...judgeRank].sort((a,b)=>eSourceCount(usedSourceCounts,a)-eSourceCount(usedSourceCounts,b));
-    for(const b of pass){
-      if(judges.length===20)break;
-      if(usedIds.has(b.id))continue;
-      const cur=eTryMake(b,"judge",usedDisplay);
-      if(!cur)continue;
-      judges.push({base:b,cur});usedIds.add(b.id);usedKeys.add(eKnowledgeKey(b));eMarkSource(usedSourceCounts,b);
-    }
+    for(const b of pass){if(judges.length>=20)break;canAddJudge(b,true)}
   }
 
   ePaper=[
@@ -1953,7 +1969,7 @@ function eBuildPaper(){
   ];
 
   if(ePaper.length!==100){
-    alert(`本次严格去重后只生成了 ${ePaper.length} 道有效题，请重新生成一次试卷。`);
+    alert(`本次相似题严格去重后只生成了 ${ePaper.length} 道有效题，请重新生成一次试卷。`);
     ePaper=[];epos=0;eSubmitted=false;
     return false;
   }
