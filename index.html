@@ -429,6 +429,8 @@ const SUPABASE_URL="https://oinjyvwdpclcuyyplthy.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbmp5dndkcGNsY3V5eXBsdGh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MTg2OTIsImV4cCI6MjEwNDA5NDY5Mn0.rxOf2ENZrI1lCbsf-LWBr94_1I4zSa46RIz_7BzZADw";
 const ACTIVATION_TOKEN_KEY="rail_quiz_activation_token_v2";
 const DEVICE_ID_KEY="rail_quiz_device_id_v2";
+// 永久兼容标记：只要本浏览器历史上已经激活过，后续网站升级/后台刷新某个激活码都不影响。
+const ACTIVATION_PERMANENT_KEY="rail_quiz_activated_forever_v1";
 
 function getDeviceId(){
   let id=localStorage.getItem(DEVICE_ID_KEY);
@@ -467,16 +469,46 @@ async function verifyExistingActivation(){
 async function activateCode(code){
   return await rpc("activate_license",{p_code:normalizeCode(code),p_device_id:getDeviceId()});
 }
+// 旧用户恢复兜底：若历史 token 丢了但 device_id 还在，尝试按后台已绑定设备恢复。
+// 如果后台禁止匿名读取，本函数会静默失败，不影响正常激活。
+async function recoverLegacyActivationByDevice(){
+  const deviceId=localStorage.getItem(DEVICE_ID_KEY);
+  if(!deviceId) return false;
+  try{
+    const url=`${SUPABASE_URL}/rest/v1/licenses?select=id&used=eq.true&device_id=eq.${encodeURIComponent(deviceId)}&limit=1`;
+    const r=await fetch(url,{headers:{
+      "apikey":SUPABASE_ANON_KEY,
+      "Authorization":"Bearer "+SUPABASE_ANON_KEY
+    }});
+    if(!r.ok) return false;
+    const rows=await r.json();
+    return Array.isArray(rows) && rows.length>0;
+  }catch(e){ return false; }
+}
 async function initLicenseGate(){
   const screen=document.getElementById("lockScreen");
   const input=document.getElementById("licenseInput");
   const btn=document.getElementById("licenseBtn");
   const msg=document.getElementById("licenseMsg");
 
-  // 兼容旧版本：只要这个站点/浏览器里已经保存过 v2 激活凭证，就永久认可，绝不因升级或网络波动清掉。
-  // ACTIVATION_TOKEN_KEY / DEVICE_ID_KEY 与旧版完全一致，所以在同一个网址直接替换 index.html 时，老用户无需重新激活。
+  // 1）已经写入永久兼容标记：直接放行，不访问后台。
+  if(localStorage.getItem(ACTIVATION_PERMANENT_KEY)==="1"){
+    screen.classList.add("hidden");
+    return;
+  }
+
+  // 2）兼容所有以前版本：只要本浏览器还保存着原来的 v2 激活凭证，立即迁移成永久标记并放行。
+  // 不再向后台反查旧 token，所以后台刷新某一枚激活码不会把原来已经激活的用户踢出去。
   const oldToken=localStorage.getItem(ACTIVATION_TOKEN_KEY);
   if(oldToken){
+    localStorage.setItem(ACTIVATION_PERMANENT_KEY,"1");
+    screen.classList.add("hidden");
+    return;
+  }
+
+  // 3）兜底恢复：极少数旧版本若 token 意外缺失，但旧 device_id 与后台绑定记录仍在，则尝试恢复一次。
+  if(await recoverLegacyActivationByDevice()){
+    localStorage.setItem(ACTIVATION_PERMANENT_KEY,"1");
     screen.classList.add("hidden");
     return;
   }
@@ -495,6 +527,7 @@ async function initLicenseGate(){
       const res=await activateCode(code);
       if(res && res.ok===true && res.token){
         localStorage.setItem(ACTIVATION_TOKEN_KEY,res.token);
+        localStorage.setItem(ACTIVATION_PERMANENT_KEY,"1");
         msg.className="lock-msg ok";
         msg.textContent="激活成功。本机凭证会一直保留，以后升级网站也不需要重新激活。";
         setTimeout(()=>screen.classList.add("hidden"),600);
@@ -609,6 +642,9 @@ function fKeywordHTML(text){
 // 新第一套支持“同一原文多挖空”：重复刷到同一知识点时，会随机抽数字、术语、条件、动作等不同位置。
 const fVariantHistory=new Map();
 const fQuestionUsage=new Map();
+// 多选题答案数轮换：不再所有多选都固定“3个正确答案”。
+// 在不改变知识点真假的前提下，部分多选只展示2个正确项+1个错误项，另一部分保留3个正确项+1个错误项。
+let fMultiAnswerVariantCounter=0;
 function fQuestionKey(text){
   return String(text||"")
     .replace(/^\s*\d+[.、]\s*/,"")
@@ -619,6 +655,7 @@ function fQuestionKey(text){
 function fResetQuestionUsage(){
   fQuestionUsage.clear();
   fVariantHistory.clear();
+  fMultiAnswerVariantCounter=0;
 }
 function fCompactQuestionText(t){
   return String(t||"").replace(/\s+/g,"").replace(/[“”‘’'"`]/g,"");
@@ -634,6 +671,12 @@ function fQuestionHasOptionLeak(v){
   }
   return false;
 }
+function fHasRepeatedListWord(text){
+  const t=String(text||"").replace(/\s+/g,"");
+  // 拦截“循环、循环”“呼吸、呼吸”等同一词在并列项里连续重复。
+  if(/([\u4e00-\u9fa5]{2,10})[、，；;]\1(?=[、，；;。等])/u.test(t))return true;
+  return false;
+}
 function fQuestionStemQualityOK(text,strictNormal=false){
   const q=String(text||"").trim();
   if(q.length<6)return false;
@@ -644,6 +687,9 @@ function fQuestionStemQualityOK(text,strictNormal=false){
   if(/^[一二三四五六七八九十]+[、.．]\s*/.test(q))return false;
   if(/^(?:第?[一二三四五六七八九十\d]+[章节项条]|[一二三四五六七八九十]+、?)\s*[（(]\s*[）)]\s*[。；;：:]?$/.test(q))return false;
   if(/根据下列内容|资料|笔记|孔孔径|孔孔深|马\.上/.test(q))return false;
+  // 不再出“第几项/第5项是什么”这种机械背序号题。
+  if(/第\s*(?:\d+|[一二三四五六七八九十]+)\s*项/.test(q))return false;
+  if(fHasRepeatedListWord(q))return false;
   if(/触[（(]\s*[）)]害/.test(q))return false;
   if(/（\s*）\s*[）)]|[（(]\s*[（(]/.test(q))return false;
   const listMarks=q.match(/(?:^|[、，；。\s])\d+[.．、]/g)||[];
@@ -848,10 +894,24 @@ function fResolveVariant(base){
     answer:v.answer||base.answer
   });
 }
+function fPrepareDisplayedChoiceOptions(src){
+  let opts=(src.options||[]).map(o=>({text:o.text,correct:(src.answer||[]).includes(o.key)}));
+  if(src.type==="multiple"){
+    const correct=opts.filter(o=>o.correct), wrong=opts.filter(o=>!o.correct);
+    // 原题多数为“3对1错”。为了让多选答案数有变化：
+    // 一半题保留3个正确项+1个错误项；另一半题随机保留2个正确项+1个错误项。
+    // 只是少展示一个同样正确的备选项，不会把正确知识点标成错误。
+    const useTwoCorrect=(fMultiAnswerVariantCounter++%2===0);
+    if(useTwoCorrect&&correct.length>=3&&wrong.length>=1){
+      opts=[...shuffle(correct).slice(0,2),...shuffle(wrong).slice(0,1)];
+    }
+  }
+  return opts;
+}
 function fChoice(base){
   const src=fResolveVariant(base);
   if(!src)return null;
-  let opts=src.options.map(o=>({text:o.text,correct:src.answer.includes(o.key)}));
+  let opts=fPrepareDisplayedChoiceOptions(src);
   if(fc.difficulty!=="easy")opts=shuffle(opts);
   return {
     kind:src.type,
@@ -895,9 +955,15 @@ function fJudge(base){
     if(!truth&&wrong.length&&chosen.length){
       const replaceIndex=Math.floor(Math.random()*chosen.length);
       const old=chosen[replaceIndex];
-      const bad=wrong[Math.floor(Math.random()*wrong.length)].text;
-      chosen[replaceIndex]=bad;
-      changes=[{old,new:bad}];
+      const otherChosen=chosen.filter((_,i)=>i!==replaceIndex);
+      const usableWrong=wrong.map(o=>o.text).filter(t=>!otherChosen.includes(t));
+      if(usableWrong.length){
+        const bad=usableWrong[Math.floor(Math.random()*usableWrong.length)];
+        chosen[replaceIndex]=bad;
+        changes=[{old,new:bad}];
+      }else{
+        truth=true;
+      }
     }else{
       truth=true;
     }
@@ -905,7 +971,7 @@ function fJudge(base){
 
   const replacement=chosen.join("、");
   const statement=fReplaceBlank(src.question,replacement);
-  if(!statement)return fChoice(src);
+  if(!statement||fHasRepeatedListWord(statement))return fChoice(src);
 
   const correctText=correct.map(o=>o.text).join("、");
   const correctStatement=fReplaceBlank(src.question,correctText);
@@ -1707,7 +1773,7 @@ let ePaper=[],epos=0,eSubmitted=false;
 function eChoice(base){
   base=fResolveVariant(base);
   if(!base)return null;
-  let opts=shuffle((base.options||[]).map(o=>({text:o.text,correct:(base.answer||[]).includes(o.key)})));
+  let opts=shuffle(fPrepareDisplayedChoiceOptions(base));
   return{
     kind:base.type,
     question:base.question,
@@ -1736,12 +1802,16 @@ function eJudge(base){
     const rightList=correct.map(o=>o.text);chosen=[...rightList];
     if(!truth&&wrong.length&&chosen.length){
       const ri=Math.floor(Math.random()*chosen.length),old=chosen[ri];
-      const bad=wrong[Math.floor(Math.random()*wrong.length)].text;
-      chosen[ri]=bad;changes=[{old,new:bad}]
+      const otherChosen=chosen.filter((_,i)=>i!==ri);
+      const usableWrong=wrong.map(o=>o.text).filter(t=>!otherChosen.includes(t));
+      if(usableWrong.length){
+        const bad=usableWrong[Math.floor(Math.random()*usableWrong.length)];
+        chosen[ri]=bad;changes=[{old,new:bad}]
+      }else truth=true;
     }else truth=true;
   }
   const used=chosen.join("、"),statement=fReplaceBlank(base.question,used);
-  if(!statement)return null;
+  if(!statement||fHasRepeatedListWord(statement))return null;
   const correctText=correct.map(o=>o.text).join("、");
   return{
     kind:"judge",
@@ -1826,6 +1896,8 @@ function eCurValid(cur){
   if(!cur||!Array.isArray(cur.options)||cur.options.length<2||cur.options.length>4)return false;
   const shown=cur.kind==="judge"?String(cur.statement||"").trim():String(cur.question||"").trim();
   if(shown.length<4)return false;
+  if(fHasRepeatedListWord(shown))return false;
+  if(/第\s*(?:\d+|[一二三四五六七八九十]+)\s*项/.test(shown))return false;
   if(cur.kind!=="judge"&&!fQuestionStemQualityOK(shown,fc&&fc.difficulty==="normal"))return false;
   const texts=cur.options.map(o=>String((o&&o.text)||"").trim());
   if(texts.some(x=>!x)||new Set(texts).size!==texts.length)return false;
