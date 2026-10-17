@@ -938,28 +938,97 @@ function fResolveVariant(base){
     answer:v.answer||base.answer
   });
 }
-function fPrepareDisplayedChoiceOptions(src){
+function fMultiStatement(src,o){
+  let t=fReplaceBlank(src.question,o.text)||String(o.text||"");
+  t=String(t).replace(/^\s*\d+[.、．]\s*/,"").trim();
+  if(t&&!/[。！？]$/.test(t))t+="。";
+  return t;
+}
+function fNegateStatement(t){
+  const core=String(t||"").replace(/[。！？]+$/g,"").trim();
+  return `“${core}”这一表述不正确。`;
+}
+function fPrepareDisplayedChoice(src){
   let opts=(src.options||[]).map(o=>({text:o.text,correct:(src.answer||[]).includes(o.key)}));
-  if(src.type==="multiple"){
-    const correct=opts.filter(o=>o.correct), wrong=opts.filter(o=>!o.correct);
-    // 原题多数为“3对1错”。为了让多选答案数有变化：
-    // 一半题保留3个正确项+1个错误项；另一半题随机保留2个正确项+1个错误项。
-    // 只是少展示一个同样正确的备选项，不会把正确知识点标成错误。
-    const useTwoCorrect=(fMultiAnswerVariantCounter++%2===0);
-    if(useTwoCorrect&&correct.length>=3&&wrong.length>=1){
-      opts=[...shuffle(correct).slice(0,2),...shuffle(wrong).slice(0,1)];
+  if(src.type!=="multiple")return {question:src.question,options:opts};
+
+  // 多选统一4个选项；正确答案数量按 2 → 3 → 4 循环变化。
+  // 不改知识点真假：需要改变正确项数量时，把原选项展开成完整表述，再用“该表述不正确”做逻辑反转。
+  let target=[2,3,4][fMultiAnswerVariantCounter++%3];
+  const correct=shuffle(opts.filter(o=>o.correct));
+  const wrong=shuffle(opts.filter(o=>!o.correct));
+  let built=[];
+
+  if(correct.length>=3 && wrong.length>=1){
+    const c=correct.slice(0,3), w=wrong[0];
+    if(target===3){
+      built=[...c,{...w}];
+      return {question:src.question,options:built};
     }
+    const cs=c.map(o=>fMultiStatement(src,o));
+    const ws=fMultiStatement(src,w);
+    if(target===2){
+      built=[
+        {text:cs[0],correct:true},
+        {text:cs[1],correct:true},
+        {text:fNegateStatement(cs[2]),correct:false},
+        {text:ws,correct:false}
+      ];
+    }else{
+      built=[
+        {text:cs[0],correct:true},
+        {text:cs[1],correct:true},
+        {text:cs[2],correct:true},
+        {text:fNegateStatement(ws),correct:true}
+      ];
+    }
+    return {question:"下列说法中，正确的有（ ）。",options:built};
   }
-  return opts;
+
+  // 少数原题只有“2个正确+1个错误”：仍补足为4项，并保持正确答案数在2或3个。
+  if(correct.length>=2 && wrong.length>=1){
+    const c=correct.slice(0,2), w=wrong[0];
+    const c1=fMultiStatement(src,c[0]), c2=fMultiStatement(src,c[1]), ws=fMultiStatement(src,w);
+    if(target===4)target=3;
+    if(target===2){
+      built=[
+        {text:c1,correct:true},
+        {text:c2,correct:true},
+        {text:ws,correct:false},
+        {text:fNegateStatement(c1),correct:false}
+      ];
+    }else{
+      built=[
+        {text:c1,correct:true},
+        {text:c2,correct:true},
+        {text:fNegateStatement(ws),correct:true},
+        {text:fNegateStatement(c1),correct:false}
+      ];
+    }
+    return {question:"下列说法中，正确的有（ ）。",options:built};
+  }
+
+  // 兜底：始终保持4项，不足时用当前题自身表述补位，不跨题取选项。
+  const raw=opts.slice(0,4);
+  while(raw.length<4 && raw.length){
+    const base=raw[raw.length%raw.length];
+    const st=fMultiStatement(src,base);
+    raw.push({text:fNegateStatement(st),correct:!base.correct});
+  }
+  return {question:src.question,options:raw.slice(0,4)};
+}
+function fPrepareDisplayedChoiceOptions(src){
+  return fPrepareDisplayedChoice(src).options;
 }
 function fChoice(base){
   const src=fResolveVariant(base);
   if(!src)return null;
-  let opts=fPrepareDisplayedChoiceOptions(src);
+  const prepared=fPrepareDisplayedChoice(src);
+  let opts=prepared.options;
   if(fc.difficulty!=="easy")opts=shuffle(opts);
   return {
     kind:src.type,
-    question:src.question,
+    question:prepared.question,
     options:opts.map((o,i)=>({...o,key:"ABCDEFG"[i]})),
     sourceId:src.id,
     sourceText:src.sourceText||"",
@@ -1817,10 +1886,11 @@ let ePaper=[],epos=0,eSubmitted=false;
 function eChoice(base){
   base=fResolveVariant(base);
   if(!base)return null;
-  let opts=shuffle(fPrepareDisplayedChoiceOptions(base));
+  const prepared=fPrepareDisplayedChoice(base);
+  let opts=shuffle(prepared.options);
   return{
     kind:base.type,
-    question:base.question,
+    question:prepared.question,
     options:opts.map((o,i)=>({...o,key:"ABCDEFG"[i]})),
     sourceId:base.id,
     sourceText:base.sourceText||"",
