@@ -162,7 +162,7 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
   <div class="hero"><h1>第一套 · 安全 / 理论分开</h1><p>安全和理论独立刷题、独立模拟考试；错题集共用。</p></div>
   <div class="card">
     <div class="row"><div><label class="title">题型</label><select id="typeSel"><option value="mixed">混合出题</option><option value="single">只练单选</option><option value="multiple">只练多选</option><option value="judge">只练判断</option></select></div>
-    <div><label class="title">难度</label><select id="diffSel"><option value="easy">简单</option><option value="normal" selected>一般</option><option value="hard">困难</option></select></div></div>
+    <div><label class="title">难度</label><select id="diffSel"><option value="easy">简单</option><option value="normal" selected>一般</option><option value="hard">困难</option><option value="hell">地狱</option></select></div></div>
 
     <div class="mode-note" style="font-weight:900">🛡️ 安全部分</div>
     <button id="startFirstSafety" class="primary start">安全 · 无限刷题</button>
@@ -178,7 +178,7 @@ button{min-height:46px;border:0;border-radius:14px;padding:12px 14px;font-size:1
 
     <button id="startFirstWrong" class="setbtn">❌ 第一套错题集（安全+理论共用） · <span id="firstWrongCount">0</span> 道<small>安全和理论刷题、考试里答错的题统一收进这里；答对后自动移出。</small></button>
     <button id="firstHome" class="secondary start">返回题库首页</button>
-    <div class="mode-note">第一套难度已分层：选择“一般”时以原文直接挖空、基础识记题为主，题目会比困难明显简单；选择“困难”时保持现在这版高难动态题，会换条件、换数字、反向提问，并使用同类相似干扰项。安全与理论仍分开刷题、分开考试，错题集继续放在一起。</div>
+    <div class="mode-note">第一套难度已分层：一般以直接识记为主；困难会换条件、换数字、反向提问；新增“地狱”难度，优先边界值、否定条件、组合辨析，并会把同一知识点的多个正确/错误表述揉在一起辨别。安全与理论仍分开刷题、分开考试，错题集继续放在一起。</div>
     <div class="mode-note" style="background:#fff8e6;border-color:#f0d48a;color:#7a5b14;font-weight:800">📌 提醒：刷题只是辅助，还是要多背原题，尤其是原题里的关键表述、数字和条件。</div>
   </div>
 </section>
@@ -580,7 +580,7 @@ function fHardScore(q){
   return s;
 }
 function fHardFilter(pool,type){
-  if(fc.difficulty!=="hard")return pool;
+  if(fc.difficulty!=="hard"&&fc.difficulty!=="hell")return pool;
   const threshold=type==="single"?3:(type==="multiple"?4:4);
   const hard=pool.filter(q=>fHardScore(q)>=threshold);
   return hard.length?hard:pool;
@@ -612,7 +612,7 @@ function fHasUsableNormalVariant(q){
   });
 }
 function fModeSingles(domain,difficulty){
-  return difficulty==="hard"?fCuratedSingles(domain):fNormalSingles(domain);
+  return (difficulty==="hard"||difficulty==="hell")?fCuratedSingles(domain):fNormalSingles(domain);
 }
 function fPool(t){
   const domain=firstDomainPool();
@@ -851,6 +851,84 @@ function fHardVariantScore(v){
   if(/^(?:下列哪一项属于|.+是[（(]|.+包括[（(]|.+分为[（(])/.test(q))s-=2;
   return s;
 }
+
+function fHellVariantScore(v){
+  const q=String((v&&v.question)||"");
+  let s=fHardVariantScore(v)*2;
+  // 地狱模式优先：否定/反向、边界、情景、组合、数值接近型。
+  if(/不属于|不符合|错误|不是|原意相反|哪一组|均属于|正确组合/.test(q))s+=8;
+  if(/是否|实测|达到|超过|不足|不小于|不大于|不得|必须|严禁|边界|上限|下限/.test(q))s+=7;
+  if(/如果|若|当.*时|情形|情况下|已\d|后才|分别|同时/.test(q))s+=5;
+  if((q.match(/\d+(?:\.\d+)?/g)||[]).length>=2)s+=4;
+  if(q.length>48)s+=2;
+  return s;
+}
+function fHellBaseScore(q){
+  let s=fHardScore(q)*3;
+  const hs=Array.isArray(q&&q.hardVariants)?q.hardVariants:[];
+  if(hs.length)s+=Math.max(...hs.map(v=>fHellVariantScore(Object.assign({},v,{question:fPolishQuestionText(v&&v.question)}))));
+  if(q&&q.type==="multiple")s+=5;
+  return s;
+}
+function fHellFullStatement(v,optText){
+  if(!v)return"";
+  const q=fPolishQuestionText(v.question);
+  const full=fReplaceBlank(q,String(optText||"").trim());
+  if(!full||full===q)return"";
+  const t=full.replace(/[？?]$/,"。").trim();
+  if(t.length<8||t.length>110||fHasRepeatedListWord(t))return"";
+  return t;
+}
+function fBuildHellComposite(base){
+  if(!base||base.type!=="single")return null;
+  const variants=fUniqueVariants(base.hardVariants,"hard").map(x=>x.v);
+  if(!variants.length)return null;
+  const truths=[],falses=[];
+  const tSeen=new Set(),fSeen=new Set();
+  const add=(arr,seen,text)=>{
+    const k=fQuestionKey(text);
+    if(!k||seen.has(k))return;seen.add(k);arr.push(text);
+  };
+  for(const v of variants){
+    const ans=new Set(Array.isArray(v.answer)?v.answer:[]);
+    // 地狱组合题只使用单一正确答案的人工变式，避免凭空制造歧义。
+    if(ans.size!==1||!Array.isArray(v.options))continue;
+    for(const o of v.options){
+      const st=fHellFullStatement(v,o&&o.text);
+      if(!st)continue;
+      if(ans.has(o&&o.key))add(truths,tSeen,st);
+      else add(falses,fSeen,st);
+    }
+  }
+  if(!truths.length||!falses.length)return null;
+
+  // 约一半做“找错误项”：3个真表述 + 1个细微错误；否则1真+3假。
+  const canWrong=truths.length>=3&&falses.length>=1;
+  const canRight=truths.length>=1&&falses.length>=3;
+  let askWrong=canWrong&&(!canRight||Math.random()<.52);
+  let texts=[],answerIndex=0,question="";
+  if(askWrong){
+    const ts=shuffle(truths).slice(0,3), bad=shuffle(falses)[0];
+    texts=[...ts,bad];
+    const tagged=shuffle(texts.map(t=>({t,correct:t===bad})));
+    texts=tagged.map(x=>x.t);answerIndex=tagged.findIndex(x=>x.correct);
+    question="下列完整表述中，错误的是（ ）。";
+  }else if(canRight){
+    const good=shuffle(truths)[0], fs=shuffle(falses).slice(0,3);
+    const tagged=shuffle([good,...fs].map(t=>({t,correct:t===good})));
+    texts=tagged.map(x=>x.t);answerIndex=tagged.findIndex(x=>x.correct);
+    question="下列完整表述中，正确的是（ ）。";
+  }else return null;
+  if(texts.length!==4||new Set(texts).size!==4||answerIndex<0)return null;
+  return Object.assign({},base,{
+    type:"single",
+    question,
+    options:texts.map((text,i)=>({key:"ABCD"[i],text})),
+    answer:["ABCD"[answerIndex]],
+    hellComposite:true
+  });
+}
+
 function fResolveVariant(base){
   if(!base)return base;
 
@@ -861,7 +939,7 @@ function fResolveVariant(base){
     : [];
 
   let candidates=[];
-  if(fc&&fc.difficulty==="hard"){
+  if(fc&&(fc.difficulty==="hard"||fc.difficulty==="hell")){
     if(base.type==="multiple"){
       // 多选本身信息量更大：困难模式保留完整四选项，不借用简单单选式问法。
       const vv=Object.assign({},base,{question:fPolishQuestionText(base.question)});
@@ -901,7 +979,7 @@ function fResolveVariant(base){
     if(!fVariantQualityOK(cleaned))return null;
     if(fc&&fc.difficulty==="normal"&&!fNormalVariantQualityOK(cleaned))return null;
     // 困难单选没有真正困难变式时不拿一般题冒充困难题。
-    if(fc&&fc.difficulty==="hard"&&base.type==="single")return null;
+    if(fc&&(fc.difficulty==="hard"||fc.difficulty==="hell")&&base.type==="single")return null;
     return cleaned;
   }
 
@@ -920,7 +998,10 @@ function fResolveVariant(base){
   // 在各自难度内部再做“少重复”选择。
   let minUse=Math.min(...candidates.map(c=>fQuestionUsage.get(c.key)||0));
   let best=candidates.filter(c=>(fQuestionUsage.get(c.key)||0)===minUse);
-  if(fc&&fc.difficulty==="hard"){
+  if(fc&&fc.difficulty==="hell"){
+    const maxHell=Math.max(...best.map(c=>fHellVariantScore(c.v)));
+    best=best.filter(c=>fHellVariantScore(c.v)===maxHell);
+  }else if(fc&&fc.difficulty==="hard"){
     const maxHard=Math.max(...best.map(c=>fHardVariantScore(c.v)));
     best=best.filter(c=>fHardVariantScore(c.v)===maxHard);
   }else if(fc&&fc.difficulty==="normal"){
@@ -1030,7 +1111,9 @@ function fPrepareDisplayedChoiceOptions(src){
   return fPrepareDisplayedChoice(src).options;
 }
 function fChoice(base){
-  const src=fResolveVariant(base);
+  let src=(fc&&fc.difficulty==="hell"&&base&&base.type==="single"&&Math.random()<.68)
+    ? (fBuildHellComposite(base)||fResolveVariant(base))
+    : fResolveVariant(base);
   if(!src)return null;
   const prepared=fPrepareDisplayedChoice(src);
   let opts=prepared.options;
@@ -1042,7 +1125,9 @@ function fChoice(base){
     sourceId:src.id,
     sourceText:src.sourceText||"",
     explanation:src.explanation||"",
-    completedText:fReplaceBlank(src.question,src.options.filter(o=>src.answer.includes(o.key)).map(o=>o.text).join("、"))
+    completedText:src.hellComposite
+      ? src.options.filter(o=>src.answer.includes(o.key)).map(o=>o.text).join("、")
+      : fReplaceBlank(src.question,src.options.filter(o=>src.answer.includes(o.key)).map(o=>o.text).join("、"))
   };
 }
 function fReplaceBlank(question,replacement){
@@ -1115,7 +1200,7 @@ function fJudge(base){
 function fKind(base){
   if(fc.type!=="mixed")return fc.type;
   const r=Math.random();
-  if(r<.22)return"judge";
+  if(r<(fc.difficulty==="hell"?.34:.22))return"judge";
   return base.type;
 }
 function fStats(){$("#fDone").textContent=fdone;$("#fRight").textContent=fright;$("#fAcc").textContent=fdone?Math.round(fright/fdone*100)+"%":"0%"}
@@ -1197,7 +1282,7 @@ function fRender(){
   $("#fFeedback").className="feedback hidden";$("#fKeywords").classList.add("hidden");$("#fOptions").innerHTML="";
   $("#fSerial").textContent="第 "+item.serial+" 题";
   const actualTypeLabel={single:"单选题",multiple:"多选题",judge:"判断题"}[fcur.kind]||"选择题";
-  $("#fTag").textContent=({easy:"简单",normal:"一般",hard:"困难"}[fc.difficulty])+" · "+actualTypeLabel;
+  $("#fTag").textContent=({easy:"简单",normal:"一般",hard:"困难",hell:"地狱"}[fc.difficulty])+" · "+actualTypeLabel;
   const tn=$("#fTypeNotice");
   tn.className="first-type-notice "+(fcur.kind||"single");
   tn.textContent=fcur.kind==="multiple"?"⚠️ 本题为多选题，可选择多个答案":(fcur.kind==="judge"?"本题为判断题":"本题为单选题");
@@ -1321,7 +1406,7 @@ function sqBuild(){
   }
 
   // 困难顺序刷题：仍按题号顺序，但只刷重点难点题
-  if(fc.difficulty==="hard"){
+  if(fc.difficulty==="hard"||fc.difficulty==="hell"){
     const threshold=sqType==="single"?3:(sqType==="multiple"?4:4);
     const hardBases=bases.filter(q=>fHardScore(q)>=threshold);
     if(hardBases.length)bases=hardBases;
@@ -1417,7 +1502,7 @@ function sqRender(){
   $("#sqBar").style.width=((sqPos+1)/total*100)+"%";
 
   const actualType={single:"单选题",multiple:"多选题",judge:"判断题"}[cur.kind]||"选择题";
-  $("#sqTag").textContent=firstDomainLabel()+" · "+({easy:"简单",normal:"一般",hard:"困难"}[fc.difficulty])+" · "+actualType;
+  $("#sqTag").textContent=firstDomainLabel()+" · "+({easy:"简单",normal:"一般",hard:"困难",hell:"地狱"}[fc.difficulty])+" · "+actualType;
 
   const tn=$("#sqTypeNotice");
   tn.className="first-type-notice "+(cur.kind||"single");
@@ -1705,7 +1790,7 @@ function bBuildQuestion(base,type){
   if(type==="judge")return fJudge(base);
   if(type==="single"||type==="multiple")return fChoice(base);
   // 混合模式：保持原题题型为主，约25%转为判断题；每题仍对应唯一sourceId
-  return Math.random()<.25 ? fJudge(base) : fChoice(base);
+  return Math.random()<(bConfig.difficulty==="hell"?.38:.25) ? fJudge(base) : fChoice(base);
 }
 function bBuildPaper(){
   bConfig.type=$("#typeSel").value;
@@ -1724,7 +1809,9 @@ function bBuildPaper(){
   // 一般/简单保持原来的随机100题；
   // 困难则从完整题池中按难点评分优先抽取，仍然保证100题不重复。
   let bases;
-  if(bConfig.difficulty==="hard"){
+  if(bConfig.difficulty==="hell"){
+    bases=shuffle(pool).sort((a,b)=>fHellBaseScore(b)-fHellBaseScore(a)).slice(0,100);
+  }else if(bConfig.difficulty==="hard"){
     bases=shuffle(pool).sort((a,b)=>fHardScore(b)-fHardScore(a)).slice(0,100);
   }else{
     bases=shuffle(pool).slice(0,100);
@@ -1804,7 +1891,7 @@ function bRender(){
   $("#bBar").style.width=((bpos+1)/100*100)+"%";
 
   const actual={single:"单选题",multiple:"多选题",judge:"判断题"}[cur.kind]||"选择题";
-  $("#bTag").textContent=firstDomainLabel()+" · "+({easy:"简单",normal:"一般",hard:"困难"}[bConfig.difficulty])+" · "+actual;
+  $("#bTag").textContent=firstDomainLabel()+" · "+({easy:"简单",normal:"一般",hard:"困难",hell:"地狱"}[bConfig.difficulty])+" · "+actual;
 
   const tn=$("#bTypeNotice");
   tn.className="first-type-notice "+(cur.kind||"single");
@@ -1893,7 +1980,9 @@ $("#bBack").onclick=()=>show("firstSetup");
 let ePaper=[],epos=0,eSubmitted=false;
 
 function eChoice(base){
-  base=fResolveVariant(base);
+  base=(fc&&fc.difficulty==="hell"&&base&&base.type==="single"&&Math.random()<.72)
+    ? (fBuildHellComposite(base)||fResolveVariant(base))
+    : fResolveVariant(base);
   if(!base)return null;
   const prepared=fPrepareDisplayedChoice(base);
   let opts=shuffle(prepared.options);
@@ -1904,7 +1993,9 @@ function eChoice(base){
     sourceId:base.id,
     sourceText:base.sourceText||"",
     explanation:base.explanation||"",
-    completedText:fReplaceBlank(base.question,(base.options||[]).filter(o=>(base.answer||[]).includes(o.key)).map(o=>o.text).join("、"))
+    completedText:base.hellComposite
+      ? (base.options||[]).filter(o=>(base.answer||[]).includes(o.key)).map(o=>o.text).join("、")
+      : fReplaceBlank(base.question,(base.options||[]).filter(o=>(base.answer||[]).includes(o.key)).map(o=>o.text).join("、"))
   };
 }
 function eJudge(base){
@@ -1982,7 +2073,13 @@ function eRecentScore(id){
   return score;
 }
 function eRankCandidates(list){
-  // 先按“最近出现次数/新近程度”排序，同分时随机
+  // 地狱模式优先最刁钻的边界/否定/组合知识点；其他难度保持原来的新近度排序。
+  if(fc&&fc.difficulty==="hell"){
+    return list
+      .map(q=>({q,hard:fHellBaseScore(q),recent:eRecentScore(q.id),rnd:Math.random()}))
+      .sort((a,b)=>b.hard-a.hard||a.recent-b.recent||a.rnd-b.rnd)
+      .map(x=>x.q);
+  }
   return list
     .map(q=>({q,score:eRecentScore(q.id),rnd:Math.random()}))
     .sort((a,b)=>a.score-b.score||a.rnd-b.rnd)
@@ -2095,7 +2192,7 @@ function eBuildChoiceGroup(list,n,kind,usedKeys,usedIds,usedDisplay,usedSourceCo
   return out;
 }
 function eJudgeVariantSignature(q){
-  const list=(fc&&fc.difficulty==="hard")?(q.hardVariants||[]):(q.normalVariants||[]);
+  const list=(fc&&(fc.difficulty==="hard"||fc.difficulty==="hell"))?(q.hardVariants||[]):(q.normalVariants||[]);
   if(!Array.isArray(list)||list.length<2)return"";
   const parts=[...new Set(list.map(v=>fQuestionKey(fPolishQuestionText(v&&v.question))).filter(Boolean))].sort();
   return parts.length>=2?parts.join("||"):"";
